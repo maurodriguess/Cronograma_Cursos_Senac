@@ -1,3 +1,4 @@
+import 'package:cronograma/presentation/cronograma.dart';
 import 'package:cronograma/presentation/pages/Instrutores/instrutor_page_form.dart';
 import 'package:cronograma/presentation/pages/Unidades%20Curriculares/unidades_curriculares_form.dart';
 import 'package:cronograma/presentation/pages/calendarios/calendario_page.dart';
@@ -105,6 +106,22 @@ class MainHomePage extends StatelessWidget {
             );
           },
         ),
+        const SizedBox(height: 10),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.group),
+          label: const Text('Exportar Cronograma'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            textStyle: const TextStyle(fontSize: 18),
+          ),
+          onPressed: () async {
+          await gerarCronogramaExcel();
+          ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Cronograma exportado para Excel!')),
+            );
+          },
+          ),
       ]),
     );
   }
