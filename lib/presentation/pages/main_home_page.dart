@@ -1,5 +1,6 @@
 import 'package:cronograma/presentation/pages/Instrutores/instrutor_page_form.dart';
 import 'package:cronograma/presentation/pages/Unidades%20Curriculares/unidades_curriculares_form.dart';
+import 'package:cronograma/presentation/pages/calendarios/calendario_page.dart';
 import 'package:cronograma/presentation/pages/cursos/curso_page_form.dart';
 import 'package:cronograma/presentation/pages/turma/turma_page.dart';
 import 'package:flutter/material.dart';
@@ -52,8 +53,23 @@ class MainHomePage extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) => const CadastroInstrutorPage()),
+              MaterialPageRoute(builder: (context) => const CadastroInstrutorPage()),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.calendar_today),
+          label: const Text('Calendario'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            textStyle: const TextStyle(fontSize: 18),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CadastroCalendariosPage()),
             );
           },
         ),
@@ -69,15 +85,13 @@ class MainHomePage extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      const CadastroUnidadesCurricularesPage()),
+              MaterialPageRoute(builder: (context) => const CadastroUnidadesCurricularesPage()),
             );
           },
         ),
         const SizedBox(height: 10),
         ElevatedButton.icon(
-          icon: const Icon(Icons.person),
+          icon: const Icon(Icons.group),
           label: const Text('Cadastro de turma'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.teal,

@@ -15,14 +15,27 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
   final _mesController = TextEditingController();
   final _dataInicioController = TextEditingController();
   final _dataFimController = TextEditingController();
-  final _idTurmaController = TextEditingController();
-
+  
   final CalendariosViewModel _calendariosViewModel =
       CalendariosViewModel(CalendariosRepository());
 
-  // Para armazenar as datas
+  // Variáveis para data
   DateTime? _dataInicio;
   DateTime? _dataFim;
+  
+  // Lista para armazenar os IDs das turmas
+  List<int> _turmas = [];
+  int? _selectedTurmaId;
+
+  // Método para carregar as turmas
+  Future<void> _loadTurmas() async {
+    // Substitua esse método pelo que for necessário para buscar as turmas da sua API/repositório
+    // Exemplo simples: simulando uma lista de turmas
+    final turmas = await _calendariosViewModel.getCalendarios();
+    setState(() {
+      _turmas = turmas.map((calendario) => calendario.idturma).toList();
+    });
+  }
 
   // Método para mostrar o DatePicker para a data de início
   Future<void> _selectDataInicio(BuildContext context) async {
@@ -61,31 +74,42 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
   // Método para salvar os dados
   Future<void> _saveCalendario() async {
     if (_formKey.currentState!.validate()) {
-      final Calendario = Calendario(
-        idTurma: int.parse(
-            _idTurmaController.text), // Converter o idturma para inteiro
+      if (_dataInicio == null || _dataFim == null || _selectedTurmaId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecione as datas e a turma.')),
+        );
+        return;
+      }
+
+      // Convertendo as datas para string no formato correto
+      String dataInicioString = _dataInicio!.toIso8601String().split('T')[0]; // formato "yyyy-MM-dd"
+      String dataFimString = _dataFim!.toIso8601String().split('T')[0]; // formato "yyyy-MM-dd"
+
+      final calendario = Calendarios(
         ano: int.parse(_anoController.text),
-        mes: int.parse(_mesController.text),
-        dataInicio: _dataInicio!,
-        dataFim: _dataFim!,
+        mes: _mesController.text,  // Mes como String
+        dataInicio: dataInicioString,
+        dataFim: dataFimString,
+        idturma: _selectedTurmaId!, // Aqui usamos o ID da turma selecionado
       );
 
       // Adicionando o calendário no repositório
-      await _calendariosViewModel.addCalendario(Calendarios(
-          ano: ano,
-          mes: mes,
-          dataInicio: dataInicio,
-          dataFim: dataFim,
-          idturma: idturma));
+      await _calendariosViewModel.addCalendario(calendario);
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Calendário cadastrado com sucesso!')));
+          const SnackBar(content: Text('Calendário cadastrado com sucesso!')));
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTurmas(); // Carregar as turmas quando a página for carregada
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Cadastro de Calendário')),
+      appBar: AppBar(title: const Text('Cadastro de Calendário')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -95,7 +119,7 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
               // Campo para o ano
               TextFormField(
                 controller: _anoController,
-                decoration: InputDecoration(labelText: 'Ano'),
+                decoration: const InputDecoration(labelText: 'Ano'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -107,7 +131,7 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
               // Campo para o mês
               TextFormField(
                 controller: _mesController,
-                decoration: InputDecoration(labelText: 'Mês'),
+                decoration: const InputDecoration(labelText: 'Mês'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -116,14 +140,24 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
                   return null;
                 },
               ),
-              // Campo para o ID da turma
-              TextFormField(
-                controller: _idTurmaController,
-                decoration: InputDecoration(labelText: 'ID da Turma'),
-                keyboardType: TextInputType.number,
+              // Campo para o ID da turma com Dropdown
+              DropdownButtonFormField<int>(
+                decoration: const InputDecoration(labelText: 'ID da Turma'),
+                value: _selectedTurmaId,
+                onChanged: (value) {
+                  setState(() {
+                    _selectedTurmaId = value;
+                  });
+                },
+                items: _turmas.map((turmaId) {
+                  return DropdownMenuItem<int>(
+                    value: turmaId,
+                    child: Text('Turma $turmaId'),
+                  );
+                }).toList(),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor, insira o ID da turma';
+                  if (value == null) {
+                    return 'Por favor, selecione uma turma';
                   }
                   return null;
                 },
@@ -131,7 +165,7 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
               // Campo para a data de início
               TextFormField(
                 controller: _dataInicioController,
-                decoration: InputDecoration(labelText: 'Data Início'),
+                decoration: const InputDecoration(labelText: 'Data Início'),
                 readOnly: true,
                 onTap: () => _selectDataInicio(context),
                 validator: (value) {
@@ -144,7 +178,7 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
               // Campo para a data de fim
               TextFormField(
                 controller: _dataFimController,
-                decoration: InputDecoration(labelText: 'Data Fim'),
+                decoration: const InputDecoration(labelText: 'Data Fim'),
                 readOnly: true,
                 onTap: () => _selectDataFim(context),
                 validator: (value) {
@@ -154,10 +188,10 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveCalendario,
-                child: Text('Salvar Calendário'),
+                child: const Text('Salvar Calendário'),
               ),
             ],
           ),
