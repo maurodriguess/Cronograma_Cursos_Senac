@@ -14,14 +14,8 @@ Future<void> gerarCronogramaExcel() async {
   Sheet sheetObject = excel['Cronograma'];
 
   // Adiciona o cabeçalho
-  sheetObject.appendRow([
-    'ID',
-    'Ano',
-    'Mês',
-    'Data Início',
-    'Data Fim',
-    'ID da Turma'
-  ]);
+  sheetObject.appendRow(
+      ['ID', 'Ano', 'Mês', 'Data Início', 'Data Fim', 'ID da Turma']);
 
   // Adiciona os dados
   for (var calendario in calendarios) {
@@ -31,7 +25,7 @@ Future<void> gerarCronogramaExcel() async {
       calendario.mes,
       calendario.dataInicio,
       calendario.dataFim,
-      calendario.idturma
+      calendario.idTurma
     ]);
   }
 

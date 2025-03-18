@@ -54,7 +54,8 @@ class MainHomePage extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const CadastroInstrutorPage()),
+              MaterialPageRoute(
+                  builder: (context) => const CadastroInstrutorPage()),
             );
           },
         ),
@@ -70,7 +71,8 @@ class MainHomePage extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CadastroCalendariosPage()),
+              MaterialPageRoute(
+                  builder: (context) => CadastroCalendariosPage()),
             );
           },
         ),
@@ -86,7 +88,9 @@ class MainHomePage extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const CadastroUnidadesCurricularesPage()),
+              MaterialPageRoute(
+                  builder: (context) =>
+                      const CadastroUnidadesCurricularesPage()),
             );
           },
         ),
@@ -116,12 +120,12 @@ class MainHomePage extends StatelessWidget {
             textStyle: const TextStyle(fontSize: 18),
           ),
           onPressed: () async {
-          await gerarCronogramaExcel();
-          ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cronograma exportado para Excel!')),
+            await gerarCronogramaExcel();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Cronograma exportado para Excel!')),
             );
           },
-          ),
+        ),
       ]),
     );
   }

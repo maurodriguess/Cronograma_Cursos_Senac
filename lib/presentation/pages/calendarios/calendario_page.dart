@@ -15,14 +15,14 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
   final _mesController = TextEditingController();
   final _dataInicioController = TextEditingController();
   final _dataFimController = TextEditingController();
-  
+
   final CalendariosViewModel _calendariosViewModel =
       CalendariosViewModel(CalendariosRepository());
 
   // Variáveis para data
   DateTime? _dataInicio;
   DateTime? _dataFim;
-  
+
   // Lista para armazenar os IDs das turmas
   List<int> _turmas = [];
   int? _selectedTurmaId;
@@ -33,7 +33,7 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
     // Exemplo simples: simulando uma lista de turmas
     final turmas = await _calendariosViewModel.getCalendarios();
     setState(() {
-      _turmas = turmas.map((calendario) => calendario.idturma).toList();
+      _turmas = turmas.map((calendario) => calendario.idTurma).toList();
     });
   }
 
@@ -76,21 +76,24 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
     if (_formKey.currentState!.validate()) {
       if (_dataInicio == null || _dataFim == null || _selectedTurmaId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione as datas e a turma.')),
+          const SnackBar(
+              content: Text('Por favor, selecione as datas e a turma.')),
         );
         return;
       }
 
       // Convertendo as datas para string no formato correto
-      String dataInicioString = _dataInicio!.toIso8601String().split('T')[0]; // formato "yyyy-MM-dd"
-      String dataFimString = _dataFim!.toIso8601String().split('T')[0]; // formato "yyyy-MM-dd"
+      String dataInicioString =
+          _dataInicio!.toIso8601String().split('T')[0]; // formato "yyyy-MM-dd"
+      String dataFimString =
+          _dataFim!.toIso8601String().split('T')[0]; // formato "yyyy-MM-dd"
 
       final calendario = Calendarios(
         ano: int.parse(_anoController.text),
-        mes: _mesController.text,  // Mes como String
+        mes: _mesController.text, // Mes como String
         dataInicio: dataInicioString,
         dataFim: dataFimString,
-        idturma: _selectedTurmaId!, // Aqui usamos o ID da turma selecionado
+        idTurma: _selectedTurmaId!, // Aqui usamos o ID da turma selecionado
       );
 
       // Adicionando o calendário no repositório
