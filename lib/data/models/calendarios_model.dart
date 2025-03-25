@@ -4,7 +4,7 @@ class Calendarios {
   final String mes;
   final String dataInicio;
   final String dataFim;
-  final int idturma;
+  final int idTurma;
 
   Calendarios({
     this.idCalendarios,
@@ -12,7 +12,7 @@ class Calendarios {
     required this.mes,
     required this.dataInicio,
     required this.dataFim,
-    required this.idturma,
+    required this.idTurma,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,7 +22,7 @@ class Calendarios {
       'mes': mes,
       'data_inicio': dataInicio,
       'data_fim': dataFim,
-      'idturma': idturma,
+      'idTurma': idTurma,
     };
   }
 }

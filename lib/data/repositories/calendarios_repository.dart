@@ -14,7 +14,8 @@ class CalendariosRepository {
 
   Future<List<Calendarios>> getCalendarios() async {
     final db = await DatabaseHelper.initDb();
-    final List<Map<String, Object?>> calendarioMaps = await db.query('Calendarios');
+    final List<Map<String, Object?>> calendarioMaps =
+        await db.query('Calendarios');
     return calendarioMaps.map((map) {
       return Calendarios(
         idCalendarios: map['idCalendarios'] as int?,
@@ -22,7 +23,7 @@ class CalendariosRepository {
         mes: map['mes'] as String,
         dataInicio: map['data_inicio'] as String,
         dataFim: map['data_fim'] as String,
-        idturma: map['idturma'] as int,
+        idTurma: map['idturma'] as int,
       );
     }).toList();
   }
