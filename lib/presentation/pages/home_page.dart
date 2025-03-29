@@ -1,8 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:cronograma/presentation/pages/Instrutores/instrutor_page_form.dart';
 import 'package:cronograma/presentation/pages/Unidades%20Curriculares/unidades_curriculares_form.dart';
 import 'package:cronograma/presentation/pages/cursos/curso_page_form.dart';
 import 'package:cronograma/presentation/pages/main_home_page.dart';
-import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,93 +32,125 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gestão dos Cronogramas'),
-        backgroundColor: const Color.fromARGB(255, 25, 250, 190),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Cabeçalho do Drawer
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.teal,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage('assets/profile_image.png'),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Bem-vindo!',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              ),
-            ),
-            // Menu para a página de Dogs
-            ListTile(
-              leading: const Icon(Icons.school, color: Colors.teal),
-              title: const Text('Cursos'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CursoPageForm()),
-                );
-              },
-            ),
-            // Menu para a página de Clientes
-            ListTile(
-              leading: const Icon(Icons.person, color: Colors.teal),
-              title: const Text('Instrutores'),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const CadastroInstrutorPage()));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.book, color: Colors.teal),
-              title: const Text('Unidades Curriculares'),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const CadastroUnidadesCurricularesPage()));
-              },
-            ),
-          ],
-        ),
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Cursos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Instrutores',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Unidades Curriculares',
+        backgroundColor: Colors.teal,
+        elevation: 0,
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              // Ação para notificações
+            },
           ),
         ],
-//      currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        onTap: _onItemTapped,
       ),
+      drawer: _buildDrawer(context),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.teal,
+              Color(0xFFE0F2F1),
+            ],
+          ),
+        ),
+        child: _pages[_selectedIndex],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.tealAccent[700],
+        child: const Icon(Icons.add),
+        onPressed: () {
+          // Ação para adicionar novo item
+        },
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: const Text("Administrador"),
+            accountEmail: const Text("admin@senac.com.br"),
+            currentAccountPicture: const CircleAvatar(
+              backgroundImage: AssetImage('assets/profile_image.png'),
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.teal,
+            ),
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.home,
+            title: 'Página Inicial',
+            destination: const MainHomePage(),
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.school,
+            title: 'Cursos',
+            destination: const CursoPageForm(),
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.person,
+            title: 'Instrutores',
+            destination: const CadastroInstrutorPage(),
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.book,
+            title: 'Unidades Curriculares',
+            destination: const CadastroUnidadesCurricularesPage(),
+          ),
+          const Divider(),
+          _buildDrawerItem(
+            context,
+            icon: Icons.settings,
+            title: 'Configurações',
+            destination: Container(), // Substitua pela página de configurações
+          ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.exit_to_app,
+            title: 'Sair',
+            destination: Container(), // Lógica de logout
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required Widget destination,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.teal),
+      title: Text(title),
+      onTap: () {
+        Navigator.pop(context); // Fecha o drawer
+        if (destination is MainHomePage) {
+          setState(() => _selectedIndex = 0);
+        } else if (destination is CursoPageForm) {
+          setState(() => _selectedIndex = 1);
+        } else if (destination is CadastroInstrutorPage) {
+          setState(() => _selectedIndex = 2);
+        } else if (destination is CadastroUnidadesCurricularesPage) {
+          setState(() => _selectedIndex = 3);
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => destination),
+          );
+        }
+      },
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:cronograma/data/models/calendarios_model.dart';
+import 'package:cronograma/data/models/turma_model.dart';
 import 'package:cronograma/data/repositories/calendarios_repository.dart';
+import 'package:cronograma/data/repositories/turma_repository.dart';
 import 'package:cronograma/presentation/viewmodels/calendarios_viewmodels.dart';
+import 'package:cronograma/presentation/viewmodels/turma_viewmodels.dart';
 import 'package:flutter/material.dart';
 
 class CadastroCalendariosPage extends StatefulWidget {
@@ -16,6 +19,7 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
   final _dataInicioController = TextEditingController();
   final _dataFimController = TextEditingController();
 
+  final TurmaViewModel _turmaViewModel = TurmaViewModel(TurmaRepository());
   final CalendariosViewModel _calendariosViewModel =
       CalendariosViewModel(CalendariosRepository());
 
@@ -24,17 +28,22 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
   DateTime? _dataFim;
 
   // Lista para armazenar os IDs das turmas
-  List<int> _turmas = [];
+  List<Turma> _turmas = [];
   int? _selectedTurmaId;
 
   // Método para carregar as turmas
   Future<void> _loadTurmas() async {
-    // Substitua esse método pelo que for necessário para buscar as turmas da sua API/repositório
-    // Exemplo simples: simulando uma lista de turmas
-    final turmas = await _calendariosViewModel.getCalendarios();
-    setState(() {
-      _turmas = turmas.map((calendario) => calendario.idTurma).toList();
-    });
+    try {
+      // Simulando uma chamada ao repositório para buscar as turmas
+      _turmas = await _turmaViewModel.getTurmas();
+      setState(() {
+        _turmas;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar turmas: $e')),
+      );
+    }
   }
 
   // Método para mostrar o DatePicker para a data de início
@@ -152,10 +161,10 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
                     _selectedTurmaId = value;
                   });
                 },
-                items: _turmas.map((turmaId) {
+                items: _turmas.map((turma) {
                   return DropdownMenuItem<int>(
-                    value: turmaId,
-                    child: Text('Turma $turmaId'),
+                    value: turma.idTurma,
+                    child: Text('Turma ${turma.turma}'),
                   );
                 }).toList(),
                 validator: (value) {

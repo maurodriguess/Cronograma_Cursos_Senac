@@ -22,7 +22,7 @@ class Calendarios {
       'mes': mes,
       'data_inicio': dataInicio,
       'data_fim': dataFim,
-      'idturma': idTurma,
+      'idTurma': idTurma,
     };
   }
 }

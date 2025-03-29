@@ -23,7 +23,7 @@ class CalendariosRepository {
         mes: map['mes'] as String,
         dataInicio: map['data_inicio'] as String,
         dataFim: map['data_fim'] as String,
-        idTurma: map['idTurma'] as int,
+        idTurma: map['idturma'] as int,
       );
     }).toList();
   }

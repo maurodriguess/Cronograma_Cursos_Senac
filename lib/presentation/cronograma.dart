@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
-import '../data/models/calendarios_model.dart';
 import '../data/repositories/calendarios_repository.dart';
 
 Future<void> gerarCronogramaExcel() async {
