@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cronograma/presentation/pages/cronograma_page.dart'; // Página principal do app
+import 'package:cronograma/presentation/pages/main_home_page.dart'; // Importe a MainHomePage
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -8,22 +8,54 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+    
+    // Configuração das animações
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    
+    _scaleAnimation = Tween(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.elasticOut,
+      ),
+    );
+    
+    _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
+    
+    _animationController.forward();
     _navigateToHome();
   }
 
   Future<void> _navigateToHome() async {
-    // Tempo mínimo para exibir a splash screen (3 segundos)
+    // Tempo total da animação + delay (3 segundos)
     await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const CronogramaPage()),
+        MaterialPageRoute(builder: (context) => const MainHomePage()),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.teal[700],
       body: Stack(
         children: [
-          // Fundo animado
+          // Fundo animado com ondas
           Positioned.fill(
             child: CustomPaint(
               painter: _WavePainter(),
@@ -44,14 +76,9 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Ícone com animação
+                // Ícone com animação de escala
                 ScaleTransition(
-                  scale: Tween(begin: 0.5, end: 1.0).animate(
-                    CurvedAnimation(
-                      parent: ModalRoute.of(context)!.animation!,
-                      curve: Curves.elasticOut,
-                    ),
-                  ),
+                  scale: _scaleAnimation,
                   child: const Icon(
                     Icons.schedule,
                     size: 100,
@@ -63,14 +90,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
                 // Título com fade-in
                 FadeTransition(
-                  opacity: Tween(begin: 0.0, end: 1.0).animate(
-                    CurvedAnimation(
-                      parent: ModalRoute.of(context)!.animation!,
-                      curve: Curves.easeIn,
-                    ),
-                  ),
+                  opacity: _fadeAnimation,
                   child: const Text(
-                    'Cronograma de Aulas',
+                    'SENAC Cronogramas',
                     style: TextStyle(
                       fontSize: 28,
                       color: Colors.white,
@@ -89,18 +111,21 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(height: 10),
 
                 // Subtítulo
-                const Text(
-                  'Organize suas aulas de forma simples',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontStyle: FontStyle.italic,
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: const Text(
+                    'Gestão de Cursos e Aulas',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 40),
 
-                // Loading animado
+                // Indicador de progresso
                 const CircularProgressIndicator(
                   color: Colors.white,
                   strokeWidth: 3,
@@ -109,11 +134,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(height: 20),
 
                 // Versão do app
-                const Text(
-                  'Versão 1.0',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white54,
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: const Text(
+                    'Versão 1.0',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white54,
+                    ),
                   ),
                 ),
               ],

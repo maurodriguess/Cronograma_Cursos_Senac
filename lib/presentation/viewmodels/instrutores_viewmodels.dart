@@ -23,6 +23,6 @@ class InstrutoresViewModel {
   }
 
   Future<int?> getInstrutorIdByNome(String nomeInstrutor) async {
-    return await repository.getInstrutoroIdByNome(nomeInstrutor);
+    return await repository.getInstrutorIdByNome(nomeInstrutor);
   }
 }

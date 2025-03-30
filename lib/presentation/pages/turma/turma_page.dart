@@ -187,9 +187,9 @@ class TurmaPageForm extends StatelessWidget {
 
                     final turma = Turma(
                       turma: _turmaController.text,
-                      idcurso: int.tryParse(_cursoController.text),
-                      idturno: turnoId,
-                      idinstrutor: instrutorId, // Definindo o instrutor
+                      idcurso: int.tryParse(_cursoController.text) ?? 0,
+                      idturno: turnoId as int,
+                      idinstrutor: instrutorId as int, // Definindo o instrutor
                     );
 
                     try {

@@ -1,6 +1,4 @@
-import 'package:cronograma/presentation/cronograma.dart';
 import 'package:cronograma/presentation/pages/Unidades%20Curriculares/unidades_curriculares_form.dart';
-import 'package:cronograma/presentation/pages/calendarios/calendario_page.dart';
 import 'package:cronograma/presentation/pages/cronograma_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cronograma/presentation/pages/cursos/curso_page_form.dart';
@@ -18,7 +16,7 @@ class MainHomePage extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFE0F7FA),
+              Color(0xFFE0F7FA), // Cor mais clara do teal
               Colors.white,
             ],
           ),
@@ -36,9 +34,10 @@ class MainHomePage extends StatelessWidget {
                       'images/senac_logo.png',
                       height: 80,
                       errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.school,
-                          size: 60,
-                          color: Colors.teal),
+                        Icons.school,
+                        size: 60,
+                        color: Colors.teal,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     const Text(
@@ -76,45 +75,47 @@ class MainHomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Grid de botões compacto
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.3,
+                // Grid de botões
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  children: [
-                    _buildMenuButton(
-                      context,
-                      icon: Icons.school,
-                      label: 'Cursos',
-                      color: Colors.teal,
-                      destination: const CursoPageForm(),
-                    ),
-                    _buildMenuButton(
-                      context,
-                      icon: Icons.person,
-                      label: 'Instrutores',
-                      color: Colors.blue,
-                      destination: const CadastroInstrutorPage(),
-                    ),
-                    _buildMenuButton(
-                      context,
-                      icon: Icons.calendar_today,
-                      label: 'Cronograma',
-                      color: Colors.orange,
-                      destination: const CronogramaPage(),
-                    ),
-                    _buildMenuButton(
-                      context,
-                      icon: Icons.book,
-                      label: 'Unidades Curriculares',
-                      color: Colors.purple,
-                      destination: const CadastroUnidadesCurricularesPage(),
-                    ),
-                  ],
+                  child: GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    children: [
+                      _buildMenuButton(
+                        context,
+                        icon: Icons.school,
+                        label: 'Cursos',
+                        color: Colors.teal,
+                        destination: const CursoPageForm(),
+                      ),
+                      _buildMenuButton(
+                        context,
+                        icon: Icons.person,
+                        label: 'Instrutores',
+                        color: Colors.blue,
+                        destination: const CadastroInstrutorPage(),
+                      ),
+                      _buildMenuButton(
+                        context,
+                        icon: Icons.calendar_today,
+                        label: 'Cronograma',
+                        color: Colors.orange,
+                        destination: const CronogramaPage(),
+                      ),
+                      _buildMenuButton(
+                        context,
+                        icon: Icons.book,
+                        label: 'Unidades Curriculares',
+                        color: Colors.purple,
+                        destination: const CadastroUnidadesCurricularesPage(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -138,31 +139,25 @@ class MainHomePage extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => destination),
-          );
-        },
+        onTap: () => _navigateTo(context, destination),
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: color, size: 28),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 8),
               Text(
                 label,
-                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: color,
                   fontWeight: FontWeight.bold,
                 ),
@@ -170,6 +165,15 @@ class MainHomePage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => page,
       ),
     );
   }
