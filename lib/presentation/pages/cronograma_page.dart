@@ -61,7 +61,7 @@ class _CronogramaPageState extends State<CronogramaPage> {
     final m = (a + 11 * h + 22 * l) ~/ 451;
     final mes = (h + l - 7 * m + 114) ~/ 31;
     final dia = (h + l - 7 * m + 114) % 31 + 1;
-    
+
     return DateTime(ano, mes, dia);
   }
 
@@ -78,7 +78,7 @@ class _CronogramaPageState extends State<CronogramaPage> {
       for (var aula in aulas) {
         final date = DateTime.parse(aula['data'] as String);
         final normalizedDate = DateTime(date.year, date.month, date.day);
-        
+
         final aulaObj = Aula(
           idAula: aula['idAula'] as int,
           idUc: aula['idUc'] as int,
@@ -171,7 +171,7 @@ class _CronogramaPageState extends State<CronogramaPage> {
 
     return Column(
       children: [
-        if (feriado != null) 
+        if (feriado != null)
           Card(
             color: Colors.amber[100],
             margin: const EdgeInsets.all(8),
@@ -205,6 +205,9 @@ class _CronogramaPageState extends State<CronogramaPage> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Text('Carregando...');
             }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return const Text('Erro ao carregar dados');
+            }
             final data = snapshot.data!;
             return Text('${data['nome_uc']} - ${data['turma']}');
           },
@@ -215,6 +218,12 @@ class _CronogramaPageState extends State<CronogramaPage> {
             FutureBuilder<Map<String, dynamic>>(
               future: _getAulaDetails(aula.idAula!),
               builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text('Carregando...');
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return const Text('Erro ao carregar dados');
+                }
                 final data = snapshot.data!;
                 return Text('Instrutor: ${data['nome_instrutor']}');
               },
@@ -247,10 +256,13 @@ class _CronogramaPageState extends State<CronogramaPage> {
                   width: double.maxFinite,
                   child: ListView(
                     shrinkWrap: true,
-                    children: _feriados.entries.map((e) => ListTile(
-                      title: Text(e.value),
-                      subtitle: Text(DateFormat('dd/MM/yyyy').format(e.key)),
-                    )).toList(),
+                    children: _feriados.entries
+                        .map((e) => ListTile(
+                              title: Text(e.value),
+                              subtitle:
+                                  Text(DateFormat('dd/MM/yyyy').format(e.key)),
+                            ))
+                        .toList(),
                   ),
                 ),
                 actions: [
@@ -279,8 +291,10 @@ class _CronogramaPageState extends State<CronogramaPage> {
                   startingDayOfWeek: StartingDayOfWeek.sunday,
                   locale: 'pt_BR',
                   headerStyle: HeaderStyle(
-                    titleTextFormatter: (date, locale) => 
-                        DateFormat('MMMM yyyy', 'pt_BR').format(date).toUpperCase(),
+                    titleTextFormatter: (date, locale) =>
+                        DateFormat('MMMM yyyy', 'pt_BR')
+                            .format(date)
+                            .toUpperCase(),
                     formatButtonVisible: false,
                     leftChevronIcon: const Icon(Icons.chevron_left),
                     rightChevronIcon: const Icon(Icons.chevron_right),
@@ -312,7 +326,9 @@ class _CronogramaPageState extends State<CronogramaPage> {
                     dowBuilder: (context, day) {
                       final text = DateFormat.EEEE('pt_BR').format(day);
                       return Center(
-                        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(text,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                       );
                     },
                     defaultBuilder: (context, date, _) {
@@ -321,15 +337,19 @@ class _CronogramaPageState extends State<CronogramaPage> {
                         margin: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: isFeriado ? Colors.red[50] : null,
-                          border: isFeriado ? Border.all(color: Colors.red) : null,
+                          border:
+                              isFeriado ? Border.all(color: Colors.red) : null,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: Text(
                             '${date.day}',
                             style: TextStyle(
-                              color: isFeriado ? Colors.red[800] : 
-                                   date.weekday == 6 || date.weekday == 7 ? Colors.red : null,
+                              color: isFeriado
+                                  ? Colors.red[800]
+                                  : date.weekday == 6 || date.weekday == 7
+                                      ? Colors.red
+                                      : null,
                               fontWeight: isFeriado ? FontWeight.bold : null,
                             ),
                           ),
@@ -344,7 +364,8 @@ class _CronogramaPageState extends State<CronogramaPage> {
                       _focusedDay = focusedDay;
                     });
                   },
-                  onFormatChanged: (format) => setState(() => _calendarFormat = format),
+                  onFormatChanged: (format) =>
+                      setState(() => _calendarFormat = format),
                   onPageChanged: (focusedDay) => _focusedDay = focusedDay,
                   eventLoader: _getEventsForDay,
                 ),
@@ -356,24 +377,43 @@ class _CronogramaPageState extends State<CronogramaPage> {
 
   Color _getColorByStatus(String status) {
     switch (status) {
-      case 'Realizada': return Colors.green;
-      case 'Cancelada': return Colors.red;
-      default: return Colors.blue;
+      case 'Realizada':
+        return Colors.green;
+      case 'Cancelada':
+        return Colors.red;
+      default:
+        return Colors.blue;
     }
   }
 
   Future<Map<String, dynamic>> _getAulaDetails(int idAula) async {
-    final db = await DatabaseHelper.instance.database;
-    final result = await db.rawQuery('''
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final result = await db.rawQuery('''
       SELECT Aulas.*, Unidades_Curriculares.nome_uc, Turma.turma, Instrutores.nome_instrutor
       FROM Aulas
       JOIN Unidades_Curriculares ON Aulas.idUc = Unidades_Curriculares.idUc
       JOIN Turma ON Aulas.idTurma = Turma.idTurma
-      JOIN Instrutores ON Turma.idinstrutor = Instrutores.idInstrutores
+      JOIN Instrutores ON Turma.idInstrutor = Instrutores.idInstrutor
       WHERE Aulas.idAula = ?
     ''', [idAula]);
 
-    return result.first;
+      if (result.isEmpty) {
+        return {
+          'nome_uc': 'Não encontrado',
+          'turma': 'Não encontrada',
+          'nome_instrutor': 'Não encontrado'
+        };
+      }
+
+      return result.first;
+    } catch (e) {
+      return {
+        'nome_uc': 'Erro: $e',
+        'turma': 'Erro: $e',
+        'nome_instrutor': 'Erro: $e'
+      };
+    }
   }
 }
 
@@ -405,29 +445,37 @@ class _AdicionarAulaDialogState extends State<AdicionarAulaDialog> {
           DropdownButtonFormField<int>(
             value: _selectedTurmaId,
             decoration: const InputDecoration(labelText: 'Turma'),
-            items: widget.turmas.map((turma) => DropdownMenuItem(
-              value: turma['idTurma'] as int,
-              child: Text(turma['turma'] as String),
-            )).toList(),
+            items: widget.turmas
+                .map((turma) => DropdownMenuItem(
+                      value: turma['idTurma'] as int,
+                      child: Text(turma['turma'] as String),
+                    ))
+                .toList(),
             onChanged: (value) => setState(() => _selectedTurmaId = value),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<int>(
             value: _selectedUcId,
             decoration: const InputDecoration(labelText: 'Unidade Curricular'),
-            items: widget.ucs.map((uc) => DropdownMenuItem(
-              value: uc['idUc'] as int,
-              child: Text(uc['nome_uc'] as String),
-            )).toList(),
+            items: widget.ucs
+                .map((uc) => DropdownMenuItem(
+                      value: uc['idUc'] as int,
+                      child: Text(uc['nome_uc'] as String),
+                    ))
+                .toList(),
             onChanged: (value) => setState(() => _selectedUcId = value),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _horario,
             decoration: const InputDecoration(labelText: 'Horário'),
-            items: ['08:00-10:00', '10:00-12:00', '14:00-16:00', '16:00-18:00', '19:00-22:00']
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+            items: [
+              '08:00-10:00',
+              '10:00-12:00',
+              '14:00-16:00',
+              '16:00-18:00',
+              '19:00-22:00'
+            ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
             onChanged: (value) => setState(() => _horario = value!),
           ),
           const SizedBox(height: 24),

@@ -4,7 +4,8 @@ import '../models/unidades_curriculares_model.dart';
 
 class UnidadesCurricularesRepository {
   // Insert a curriculum unit and return its ID
-  Future<int> insertUnidadeCurricular(UnidadesCurriculares unidadeCurricular) async {
+  Future<int> insertUnidadeCurricular(
+      UnidadesCurriculares unidadeCurricular) async {
     final db = await DatabaseHelper.instance.database;
     return await db.insert(
       'Unidades_Curriculares',
@@ -15,12 +16,20 @@ class UnidadesCurricularesRepository {
 
   // Get all curriculum units with error handling
   Future<List<UnidadesCurriculares>> getUnidadesCurriculares() async {
+    final db = await DatabaseHelper.instance.database;
     try {
-      final db = await DatabaseHelper.instance.database;
-      final List<Map<String, dynamic>> ucMaps = await db.query('Unidades_Curriculares');
-      return ucMaps.map(UnidadesCurriculares.fromMap).toList();
+      final List<Map<String, dynamic>> maps =
+          await db.query('Unidades_Curriculares');
+      return List.generate(maps.length, (i) {
+        return UnidadesCurriculares(
+          idUc: maps[i]['idUc'] as int,
+          nomeUc: maps[i]['nome_uc'] as String,
+          cargahoraria: maps[i]['cargahoraria'] as int,
+          idcurso: maps[i]['idCurso'] as int,
+        );
+      });
     } catch (e) {
-      throw Exception('Failed to load curriculum units: $e');
+      throw Exception('Failed to load curriculum units: ${e.toString()}');
     }
   }
 
@@ -36,7 +45,8 @@ class UnidadesCurricularesRepository {
   }
 
   // Update a curriculum unit and return number of affected rows
-  Future<int> updateUnidadeCurricular(UnidadesCurriculares unidadeCurricular) async {
+  Future<int> updateUnidadeCurricular(
+      UnidadesCurriculares unidadeCurricular) async {
     final db = await DatabaseHelper.instance.database;
     return await db.update(
       'Unidades_Curriculares',

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 class DatabaseHelper {
   static const _databaseName = 'education_database.db';
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
   // Singleton instance
   static final DatabaseHelper instance = DatabaseHelper._internal();
@@ -77,6 +77,7 @@ class DatabaseHelper {
       CREATE TABLE Unidades_Curriculares (
         idUc INTEGER PRIMARY KEY AUTOINCREMENT,
         nome_uc TEXT NOT NULL,
+        cargahoraria INTEGER,
         idCurso INTEGER,
         FOREIGN KEY (idCurso) REFERENCES Cursos(idCurso)
       );
@@ -128,6 +129,16 @@ class DatabaseHelper {
         );
       ''');
     }
+
+    if (oldVersion < 3) {
+      // Adiciona a nova coluna cargahoraria na tabela Unidades_Curriculares
+      try {
+        await db.execute(
+            'ALTER TABLE Unidades_Curriculares ADD COLUMN cargahoraria INTEGER DEFAULT 0');
+      } catch (e) {
+        // Ignora se a coluna já existir
+      }
+    }
   }
 
   Future<void> _insertInitialData(Database db) async {
@@ -135,14 +146,10 @@ class DatabaseHelper {
     await db.insert('Turno', {'turno': 'Vespertino'});
     await db.insert('Turno', {'turno': 'Noturno'});
 
-    await db.insert('Cursos', {
-      'nome_curso': 'Técnico em Informática',
-      'cargahoraria': 1200
-    });
-    await db.insert('Cursos', {
-      'nome_curso': 'Técnico em Administração',
-      'cargahoraria': 1000
-    });
+    await db.insert('Cursos',
+        {'nome_curso': 'Técnico em Informática', 'cargahoraria': 1200});
+    await db.insert('Cursos',
+        {'nome_curso': 'Técnico em Administração', 'cargahoraria': 1000});
 
     await db.insert('Instrutores', {
       'nome_instrutor': 'Prof. Silva',
@@ -180,27 +187,27 @@ class DatabaseHelper {
 
   Future<int> insertAula(Map<String, dynamic> aula) async {
     final db = await database;
-    
+
     if (aula['data'] is String && (aula['data'] as String).contains('/')) {
       final data = parseDataBrasileira(aula['data'] as String);
       if (data != null) {
         aula['data'] = formatarParaBanco(data);
       }
     }
-    
+
     return await db.insert('Aulas', aula);
   }
 
   Future<int> updateAula(Map<String, dynamic> aula) async {
     final db = await database;
-    
+
     if (aula['data'] is String && (aula['data'] as String).contains('/')) {
       final data = parseDataBrasileira(aula['data'] as String);
       if (data != null) {
         aula['data'] = formatarParaBanco(data);
       }
     }
-    
+
     return await db.update(
       'Aulas',
       aula,

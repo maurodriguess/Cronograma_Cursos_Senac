@@ -4,27 +4,34 @@ class Turma {
   final int? idcurso;
   final int idturno;
   final int idinstrutor;
+  final int? idUnidadeCurricular; // Adicione se necessário
 
   Turma({
     this.idTurma,
     required this.turma,
-    required this.idcurso,
+    this.idcurso,
     required this.idturno,
     required this.idinstrutor,
+    this.idUnidadeCurricular,
   });
 
-  // Adicione este método ESSENCIAL
   factory Turma.fromMap(Map<String, dynamic> map) {
     return Turma(
-      idTurma: map['idTurma'] as int?,
-      turma: map['turma'] as String,
-      idcurso: map['idcurso'] as int,
-      idturno: map['idturno'] as int,
-      idinstrutor: map['idinstrutor'] as int,
+      idTurma: safeParseInt(map['idTurma']),
+      turma: map['turma']?.toString().trim() ?? '[Sem nome]',
+      idcurso: safeParseInt(map['idcurso']),
+      idturno: safeParseInt(map['idturno']) ?? 1, // Valor padrão 1
+      idinstrutor: safeParseInt(map['idinstrutor']) ?? 0,
+      idUnidadeCurricular: safeParseInt(map['idUnidadeCurricular']),
     );
   }
 
-  // Método útil para operações de insert/update
+  static int? safeParseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'idTurma': idTurma,
@@ -32,6 +39,8 @@ class Turma {
       'idcurso': idcurso,
       'idturno': idturno,
       'idinstrutor': idinstrutor,
+      if (idUnidadeCurricular != null)
+        'idUnidadeCurricular': idUnidadeCurricular,
     };
   }
 }

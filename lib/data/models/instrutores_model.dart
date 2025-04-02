@@ -1,12 +1,12 @@
 class Instrutores {
-  final int? idInstrutores;
+  final int? idInstrutor;
   final String nomeInstrutor;
-  final String? especializacao;  // New optional field
-  final String? email;           // New optional field
-  final String? telefone;        // New optional field
+  final String? especializacao; // New optional field
+  final String? email; // New optional field
+  final String? telefone; // New optional field
 
   Instrutores({
-    this.idInstrutores,
+    this.idInstrutor,
     required this.nomeInstrutor,
     this.especializacao,
     this.email,
@@ -16,7 +16,7 @@ class Instrutores {
   // Factory constructor to create object from Map (database result)
   factory Instrutores.fromMap(Map<String, dynamic> map) {
     return Instrutores(
-      idInstrutores: map['idInstrutores'] as int?,
+      idInstrutor: map['idInstrutor'] as int?,
       nomeInstrutor: map['nome_instrutor'] as String,
       especializacao: map['especializacao'] as String?,
       email: map['email'] as String?,
@@ -27,7 +27,7 @@ class Instrutores {
   // Convert object to Map for database operations
   Map<String, dynamic> toMap() {
     return {
-      'idInstrutores': idInstrutores,
+      'idInstrutor': idInstrutor,
       'nome_instrutor': nomeInstrutor,
       'especializacao': especializacao,
       'email': email,

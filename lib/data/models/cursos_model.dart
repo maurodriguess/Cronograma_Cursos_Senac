@@ -1,18 +1,26 @@
 class Cursos {
-  final int? idCursos;
+  final int? idCurso;
   final String nomeCurso;
-  final int cargahoraria; // Total workload in hours
+  final int cargahoraria;
 
-  Cursos({
-    this.idCursos,
+  const Cursos({
+    this.idCurso,
     required this.nomeCurso,
     required this.cargahoraria,
   });
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Cursos && other.idCurso == idCurso;
+  }
+
+  @override
+  int get hashCode => idCurso.hashCode;
   // Factory constructor for creating from database maps
   factory Cursos.fromMap(Map<String, dynamic> map) {
     return Cursos(
-      idCursos: map['idCursos'] as int?,
+      idCurso: map['idCurso'] as int?,
       nomeCurso: map['nome_curso'] as String,
       cargahoraria: map['cargahoraria'] as int,
     );
@@ -21,7 +29,7 @@ class Cursos {
   // Convert to map for database operations
   Map<String, dynamic> toMap() {
     return {
-      'idCursos': idCursos,
+      'idCurso': idCurso,
       'nome_curso': nomeCurso,
       'cargahoraria': cargahoraria,
     };

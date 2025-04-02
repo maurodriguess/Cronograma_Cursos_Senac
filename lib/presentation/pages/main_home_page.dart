@@ -1,5 +1,6 @@
 import 'package:cronograma/presentation/pages/Unidades%20Curriculares/unidades_curriculares_form.dart';
 import 'package:cronograma/presentation/pages/cronograma_page.dart';
+import 'package:cronograma/presentation/pages/turma/turma_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cronograma/presentation/pages/cursos/curso_page_form.dart';
 import 'package:cronograma/presentation/pages/instrutores/instrutor_page_form.dart';
@@ -81,8 +82,8 @@ class MainHomePage extends StatelessWidget {
                   child: GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.3,
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.0,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
                     children: [
@@ -102,17 +103,24 @@ class MainHomePage extends StatelessWidget {
                       ),
                       _buildMenuButton(
                         context,
-                        icon: Icons.calendar_today,
-                        label: 'Cronograma',
-                        color: Colors.orange,
-                        destination: const CronogramaPage(),
-                      ),
-                      _buildMenuButton(
-                        context,
                         icon: Icons.book,
                         label: 'Unidades Curriculares',
                         color: Colors.purple,
                         destination: const CadastroUnidadesCurricularesPage(),
+                      ),
+                      _buildMenuButton(
+                        context,
+                        icon: Icons.people_alt,
+                        label: 'Turma',
+                        color: const Color.fromARGB(255, 255, 0, 119),
+                        destination: TurmaPageForm(),
+                      ),
+                      _buildMenuButton(
+                        context,
+                        icon: Icons.calendar_today,
+                        label: 'Cronograma',
+                        color: Colors.orange,
+                        destination: const CronogramaPage(),
                       ),
                     ],
                   ),
