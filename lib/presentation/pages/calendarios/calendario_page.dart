@@ -58,29 +58,29 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
     }
   }
 
-  // Método para salvar os dados
-  Future<void> _saveCalendario() async {
-    if (_formKey.currentState!.validate()) {
-      final Calendario = Calendario(
-        idTurma: int.parse(
-            _idTurmaController.text), // Converter o idturma para inteiro
-        ano: int.parse(_anoController.text),
-        mes: int.parse(_mesController.text),
-        dataInicio: _dataInicio!,
-        dataFim: _dataFim!,
-      );
+  // // Método para salvar os dados
+  // Future<void> _saveCalendario() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     final Calendario = Calendario(
+  //       idTurma: int.parse(
+  //           _idTurmaController.text), // Converter o idturma para inteiro
+  //       ano: int.parse(_anoController.text),
+  //       mes: int.parse(_mesController.text),
+  //       dataInicio: _dataInicio!,
+  //       dataFim: _dataFim!,
+  //     );
 
-      // Adicionando o calendário no repositório
-      await _calendariosViewModel.addCalendario(Calendarios(
-          ano: ano,
-          mes: mes,
-          dataInicio: dataInicio,
-          dataFim: dataFim,
-          idturma: idturma));
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Calendário cadastrado com sucesso!')));
-    }
-  }
+  //     // Adicionando o calendário no repositório
+      // await _calendariosViewModel.addCalendario(Calendarios(
+      //     ano: ano,
+      //     mes: mes,
+      //     dataInicio: dataInicio,
+      //     dataFim: dataFim,
+      //     idturma: idturma));
+      // ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Calendário cadastrado com sucesso!')));
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -153,11 +153,11 @@ class _CadastroCalendariosPageState extends State<CadastroCalendariosPage> {
                   }
                   return null;
                 },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveCalendario,
-                child: Text('Salvar Calendário'),
+              // ),
+              // SizedBox(height: 20),
+              // ElevatedButton(
+              //   onPressed: _saveCalendario,
+              //   child: Text('Salvar Calendário'),
               ),
             ],
           ),
