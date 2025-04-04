@@ -7,18 +7,48 @@ class CalendariosViewModel {
   CalendariosViewModel(this.repository);
 
   Future<void> addCalendario(Calendarios calendario) async {
-    await repository.insertCalendario(calendario);
+    try {
+      await repository.insertCalendario(calendario);
+    } catch (e) {
+      print('Erro ao adicionar calendário: $e');
+      rethrow;
+    }
   }
 
   Future<List<Calendarios>> getCalendarios() async {
-    return await repository.getCalendarios();
+    try {
+      return await repository.getCalendarios();
+    } catch (e) {
+      print('Erro ao obter calendários: $e');
+      return [];
+    }
   }
 
   Future<void> updateCalendario(Calendarios calendario) async {
-    await repository.updateCalendario(calendario);
+    try {
+      await repository.updateCalendario(calendario);
+    } catch (e) {
+      print('Erro ao atualizar calendário: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteCalendario(int id) async {
-    await repository.deleteCalendario(id);
+    try {
+      await repository.deleteCalendario(id);
+    } catch (e) {
+      print('Erro ao deletar calendário: $e');
+      rethrow;
+    }
+  }
+
+  // Método adicional para buscar calendários por turma
+  Future<List<Calendarios>> getCalendariosPorTurma(int idTurma) async {
+    try {
+      return await repository.getCalendariosPorTurma(idTurma);
+    } catch (e) {
+      print('Erro ao buscar calendários por turma: $e');
+      return [];
+    }
   }
 }

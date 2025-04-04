@@ -1,3 +1,4 @@
+import 'package:cronograma/presentation/cronograma.dart';
 import 'package:cronograma/presentation/pages/Unidades%20Curriculares/unidades_curriculares_form.dart';
 import 'package:cronograma/presentation/pages/cronograma_page.dart';
 import 'package:cronograma/presentation/pages/turma/turma_page.dart';
