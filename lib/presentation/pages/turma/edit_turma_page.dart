@@ -39,12 +39,27 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
   void initState() {
     super.initState();
     _turmaController = TextEditingController(text: widget.turma.turma);
-    _turnoSelecionado = widget.turnos.firstWhere(
-      (t) => t == widget.turma.idturno,
-      orElse: () => widget.turnos.first,
-    );
-    _cursoIdSelecionado = widget.turma.idcurso;
-    _instrutorIdSelecionado = widget.turma.idinstrutor;
+
+    // Inicialização segura dos valores
+    if (widget.turnos.contains(widget.turma.idturno)) {
+      _turnoSelecionado = widget.turma.idturno as String;
+    } else {
+      _turnoSelecionado = widget.turnos.isNotEmpty ? widget.turnos.first : '';
+    }
+
+    _cursoIdSelecionado =
+        widget.cursos.any((c) => c.idCurso == widget.turma.idcurso)
+            ? widget.turma.idcurso
+            : widget.cursos.isNotEmpty
+                ? widget.cursos.first.idCurso
+                : null;
+
+    _instrutorIdSelecionado =
+        widget.instrutores.any((i) => i.idInstrutor == widget.turma.idinstrutor)
+            ? widget.turma.idinstrutor
+            : widget.instrutores.isNotEmpty
+                ? widget.instrutores.first.idInstrutor
+                : null;
   }
 
   @override
@@ -211,14 +226,20 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                       ),
                       const SizedBox(height: 20),
                       DropdownButtonFormField<int>(
-                        value: _cursoIdSelecionado,
-                        items: widget.cursos.map((curso) {
-                          return DropdownMenuItem<int>(
-                            value: curso
-                                .idCurso, // Verifique se há ids duplicados aqui
-                            child: Text(curso.nomeCurso),
-                          );
-                        }).toList(),
+                        value: _instrutorIdSelecionado,
+                        items: widget.instrutores.isEmpty
+                            ? [
+                                DropdownMenuItem<int>(
+                                  value: null,
+                                  child: Text('Nenhum instrutor disponível'),
+                                )
+                              ]
+                            : widget.instrutores.map((instrutor) {
+                                return DropdownMenuItem<int>(
+                                  value: instrutor.idInstrutor,
+                                  child: Text(instrutor.nomeInstrutor),
+                                );
+                              }).toList(),
                         onChanged: (int? value) {
                           if (value != null) {
                             setState(() => _instrutorIdSelecionado = value);

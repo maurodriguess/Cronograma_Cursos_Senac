@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:cronograma/core/database_helper.dart';
@@ -14,6 +13,7 @@ class CronogramaPage extends StatefulWidget {
 class _CronogramaPageState extends State<CronogramaPage> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
+  // ignore: unused_field
   CalendarFormat _calendarFormat = CalendarFormat.month;
   final Map<DateTime, List<Aula>> _events = {};
   final Map<DateTime, String> _feriados = {};

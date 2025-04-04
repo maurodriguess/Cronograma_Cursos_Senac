@@ -1,3 +1,4 @@
+import 'package:cronograma/data/models/turma_com_nomes.dart' show TurmaComNomes;
 import 'package:sqflite/sqflite.dart';
 import '../../core/database_helper.dart';
 import '../models/turma_model.dart';
@@ -13,16 +14,39 @@ class TurmaRepository {
     );
   }
 
-  // Get all classes with proper error handling
   Future<List<Turma>> getTurmas() async {
-  try {
-    final db = await DatabaseHelper.instance.database;
-    final List<Map<String, dynamic>> turmaMaps = await db.query('Turma');
-    return turmaMaps.map<Turma>((map) => Turma.fromMap(map)).toList();
-  } catch (e) {
-    throw Exception('Failed to load classes: $e');
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final List<Map<String, dynamic>> turmaMaps = await db.query('Turma');
+      return turmaMaps.map<Turma>((map) => Turma.fromMap(map)).toList();
+    } catch (e) {
+      throw Exception('Failed to load classes: $e');
+    }
   }
-}
+
+  // Get all classes with proper error handling
+  Future<List<TurmaComNomes>> getTurmasNomes() async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final List<Map<String, dynamic>> turmaMaps = await db.rawQuery('''
+      SELECT 
+        t.*,
+        c.nome_curso as nome_curso,
+        i.nome_instrutor as nome_instrutor,
+        tu.turno
+      FROM Turma t
+      JOIN Cursos c ON t.idCurso = c.idCurso
+      JOIN Instrutores i ON t.idInstrutor = i.idInstrutor
+      JOIN Turno tu ON tu.idTurno = t.idTurno
+    ''');
+
+      return turmaMaps
+          .map<TurmaComNomes>((map) => TurmaComNomes.fromMap(map))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to load classes: $e');
+    }
+  }
 
   // Get classes by course ID
   Future<List<Turma>> getTurmasByCurso(int cursoId) async {

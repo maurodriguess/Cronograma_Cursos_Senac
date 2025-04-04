@@ -27,6 +27,7 @@ class _EditUnidadeCurricularPageState extends State<EditUnidadeCurricularPage> {
   late final TextEditingController _cargaHorariaController;
   final UnidadesCurricularesViewModel _viewModel =
       UnidadesCurricularesViewModel(UnidadesCurricularesRepository());
+  // ignore: unused_field
   final CursosViewModel _cursosViewModel = CursosViewModel(CursosRepository());
   bool _isLoading = false;
   Cursos? _cursoSelecionado;
