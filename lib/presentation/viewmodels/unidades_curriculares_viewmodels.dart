@@ -12,7 +12,11 @@ class UnidadesCurricularesViewModel {
   }
 
   Future<List<UnidadesCurriculares>> getUnidadesCurriculares() async {
-    return await repository.getUnidadesCurriculares();
+    try {
+      return await repository.getUnidadesCurriculares();
+    } catch (e) {
+      throw Exception('Error loading curriculum units: ${e.toString()}');
+    }
   }
 
   Future<void> updateUnidadeCurricular(

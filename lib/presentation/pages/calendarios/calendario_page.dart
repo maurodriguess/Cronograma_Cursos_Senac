@@ -7,6 +7,8 @@ import 'package:cronograma/presentation/viewmodels/turma_viewmodels.dart';
 import 'package:flutter/material.dart';
 
 class CadastroCalendariosPage extends StatefulWidget {
+  const CadastroCalendariosPage({super.key});
+
   @override
   _CadastroCalendariosPageState createState() =>
       _CadastroCalendariosPageState();

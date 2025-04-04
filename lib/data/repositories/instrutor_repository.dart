@@ -3,58 +3,113 @@ import '../../core/database_helper.dart';
 import '../models/instrutores_model.dart';
 
 class InstrutoresRepository {
-  Future<void> insertInstrutor(Instrutores instrutor) async {
-    final db = await DatabaseHelper.initDb();
-    await db.insert(
-      'Instrutores',
-      instrutor.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
+  final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
 
-  Future<List<Instrutores>> getInstrutores() async {
-    final db = await DatabaseHelper.initDb();
-    final List<Map<String, Object?>> instrutorMaps =
-        await db.query('Instrutores');
-    return instrutorMaps.map((map) {
-      return Instrutores(
-        idInstrutores: map['idInstrutores'] as int?,
-        nomeInstrutor: map['nome_instrutor'] as String,
+  // Insert an instructor and return the new ID
+  Future<int> insertInstrutor(Instrutores instrutor) async {
+    final db = await _databaseHelper.database;
+    try {
+      return await db.insert(
+        'Instrutores',
+        instrutor.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
-    }).toList();
-  }
-
-  Future<void> updateInstrutor(Instrutores instrutor) async {
-    final db = await DatabaseHelper.initDb();
-    await db.update(
-      'Instrutores',
-      instrutor.toMap(),
-      where: 'idInstrutores = ?',
-      whereArgs: [instrutor.idInstrutores],
-    );
-  }
-
-  Future<void> deleteInstrutor(int id) async {
-    final db = await DatabaseHelper.initDb();
-    await db.delete(
-      'Instrutores',
-      where: 'idInstrutores = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<int?> getInstrutoroIdByNome(String nomeInstrutor) async {
-    final db = await DatabaseHelper.initDb();
-    final List<Map<String, Object?>> result = await db.query(
-      'Instrutor',
-      where: 'nome_instrutor = ?',
-      whereArgs: [nomeInstrutor],
-    );
-
-    if (result.isNotEmpty) {
-      return result.first['idCursos'] as int?;
+    } catch (e) {
+      throw Exception('Failed to insert instructor: ${e.toString()}');
     }
+  }
 
-    return null; // Caso não encontre o curso com o nome fornecido.
+  // Get all instructors with proper error handling
+  Future<List<Instrutores>> getInstrutores() async {
+    final db = await _databaseHelper.database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query('Instrutores');
+      return List.generate(maps.length, (i) {
+        return Instrutores.fromMap(maps[i]);
+      });
+    } catch (e) {
+      throw Exception('Failed to load instructors: ${e.toString()}');
+    }
+  }
+
+  // Update an instructor and return number of affected rows
+  Future<int> updateInstrutor(Instrutores instrutor) async {
+    final db = await _databaseHelper.database;
+    try {
+      return await db.update(
+        'Instrutores',
+        instrutor.toMap(),
+        where:
+            'idInstrutor = ?', // Corrigido para usar o nome correto da coluna
+        whereArgs: [instrutor.idInstrutor],
+      );
+    } catch (e) {
+      throw Exception('Failed to update instructor: ${e.toString()}');
+    }
+  }
+
+  // Delete an instructor and return number of affected rows
+  Future<int> deleteInstrutor(int id) async {
+    final db = await _databaseHelper.database;
+    try {
+      return await db.delete(
+        'Instrutores',
+        where:
+            'idInstrutor = ?', // Corrigido para usar o nome correto da coluna
+        whereArgs: [id],
+      );
+    } catch (e) {
+      throw Exception('Failed to delete instructor: ${e.toString()}');
+    }
+  }
+
+  // Get instructor ID by name (optimized)
+  Future<int?> getInstrutorIdByNome(String nomeInstrutor) async {
+    final db = await _databaseHelper.database;
+    try {
+      final List<Map<String, dynamic>> result = await db.query(
+        'Instrutores',
+        columns: [
+          'idInstrutor'
+        ], // Corrigido para usar o nome correto da coluna
+        where: 'nome_instrutor = ?',
+        whereArgs: [nomeInstrutor],
+        limit: 1,
+      );
+      return result.isNotEmpty ? result.first['idInstrutor'] as int? : null;
+    } catch (e) {
+      throw Exception('Failed to get instructor ID: ${e.toString()}');
+    }
+  }
+
+  // Check if instructor exists by name
+  Future<bool> instrutorExists(String nomeInstrutor) async {
+    final db = await _databaseHelper.database;
+    try {
+      final result = await db.rawQuery(
+        'SELECT EXISTS(SELECT 1 FROM Instrutores WHERE nome_instrutor = ? LIMIT 1)',
+        [nomeInstrutor],
+      );
+      return result.isNotEmpty && result.first.values.first == 1;
+    } catch (e) {
+      throw Exception('Failed to check instructor existence: ${e.toString()}');
+    }
+  }
+
+  // Get instructors by specialization
+  Future<List<Instrutores>> getInstrutoresByEspecializacao(
+      String especializacao) async {
+    final db = await _databaseHelper.database;
+    try {
+      final List<Map<String, dynamic>> results = await db.query(
+        'Instrutores',
+        where: 'especializacao = ?',
+        whereArgs: [especializacao],
+      );
+      return results.map((map) => Instrutores.fromMap(map)).toList();
+    } catch (e) {
+      throw Exception(
+          'Failed to get instructors by specialization: ${e.toString()}');
+    }
   }
 }
