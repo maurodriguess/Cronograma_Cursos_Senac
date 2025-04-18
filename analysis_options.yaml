@@ -13,6 +13,7 @@ analyzer:
     collection_methods_unrelated_type: ignore
     deprecated_member_use: ignore
     library_private_types_in_public_api: ignore
+    unused_local_variable: ignore
     use_build_context_synchronously: ignore
 include: package:flutter_lints/flutter.yaml
 

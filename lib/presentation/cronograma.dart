@@ -1,42 +1,44 @@
-import 'dart:io';
-import 'package:excel/excel.dart';
-import '../data/repositories/calendarios_repository.dart';
+// // ignore_for_file: avoid_print
 
-Future<void> gerarCronogramaExcel() async {
-  final repository = CalendariosRepository();
-  final calendarios = await repository.getCalendarios();
+// import 'dart:io';
+// import 'package:excel/excel.dart';
+// import '../data/repositories/calendarios_repository.dart';
 
-  // Inicializa o Excel
-  var excel = Excel.createExcel();
+// Future<void> gerarCronogramaExcel() async {
+//   final repository = CalendariosRepository();
+//   final calendarios = await repository.getCalendarios();
 
-  // Seleciona ou cria a planilha
-  Sheet sheetObject = excel['Cronograma'];
+//   // Inicializa o Excel
+//   var excel = Excel.createExcel();
 
-  // Adiciona o cabeçalho
-  sheetObject.appendRow(
-      ['ID', 'Ano', 'Mês', 'Data Início', 'Data Fim', 'ID da Turma']);
+//   // Seleciona ou cria a planilha
+//   Sheet sheetObject = excel['Cronograma'];
 
-  // Adiciona os dados
-  for (var calendario in calendarios) {
-    sheetObject.appendRow([
-      calendario.idCalendarios ?? '',
-      calendario.ano,
-      calendario.mes,
-      calendario.dataInicio,
-      calendario.dataFim,
-      calendario.idTurma
-    ]);
-  }
+//   // Adiciona o cabeçalho
+//   sheetObject.appendRow(
+//       ['ID', 'Ano', 'Mês', 'Data Início', 'Data Fim', 'ID da Turma']);
 
-  // Define o caminho onde o arquivo será salvo
-  final outputFile = File('cronograma.xlsx');
+//   // Adiciona os dados
+//   for (var calendario in calendarios) {
+//     sheetObject.appendRow([
+//       calendario.idCalendarios ?? '',
+//       calendario.ano,
+//       calendario.mes,
+//       calendario.dataInicio,
+//       calendario.dataFim,
+//       calendario.idTurma
+//     ]);
+//   }
 
-  // Salva o arquivo Excel
-  final fileBytes = excel.encode();
-  if (fileBytes != null) {
-    await outputFile.writeAsBytes(fileBytes);
-    print('Arquivo Excel gerado com sucesso!');
-  } else {
-    print('Erro ao gerar o arquivo Excel.');
-  }
-}
+//   // Define o caminho onde o arquivo será salvo
+//   final outputFile = File('cronograma.xlsx');
+
+//   // Salva o arquivo Excel
+//   final fileBytes = excel.encode();
+//   if (fileBytes != null) {
+//     await outputFile.writeAsBytes(fileBytes);
+//     print('Arquivo Excel gerado com sucesso!');
+//   } else {
+//     print('Erro ao gerar o arquivo Excel.');
+//   }
+// }

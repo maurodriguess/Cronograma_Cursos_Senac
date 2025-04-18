@@ -1,3 +1,5 @@
+// ignore_for_file: unrelated_type_equality_checks
+
 import 'package:cronograma/data/models/cursos_model.dart';
 import 'package:cronograma/data/models/instrutores_model.dart';
 import 'package:cronograma/data/models/turma_model.dart';
@@ -39,27 +41,21 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
   void initState() {
     super.initState();
     _turmaController = TextEditingController(text: widget.turma.turma);
+    
+    // Inicialização segura do turno selecionado
+    _turnoSelecionado = widget.turnos.isNotEmpty && widget.turma.idturno > 0 && widget.turma.idturno <= widget.turnos.length
+        ? widget.turnos[widget.turma.idturno - 1]
+        : widget.turnos.isNotEmpty ? widget.turnos.first : 'Matutino';
 
-    // Inicialização segura dos valores
-    if (widget.turnos.contains(widget.turma.idturno)) {
-      _turnoSelecionado = widget.turma.idturno as String;
-    } else {
-      _turnoSelecionado = widget.turnos.isNotEmpty ? widget.turnos.first : '';
-    }
+    // Inicialização segura do curso selecionado
+    _cursoIdSelecionado = widget.cursos.any((c) => c.idCurso == widget.turma.idcurso)
+        ? widget.turma.idcurso
+        : widget.cursos.isNotEmpty ? widget.cursos.first.idCurso : null;
 
-    _cursoIdSelecionado =
-        widget.cursos.any((c) => c.idCurso == widget.turma.idcurso)
-            ? widget.turma.idcurso
-            : widget.cursos.isNotEmpty
-                ? widget.cursos.first.idCurso
-                : null;
-
-    _instrutorIdSelecionado =
-        widget.instrutores.any((i) => i.idInstrutor == widget.turma.idinstrutor)
-            ? widget.turma.idinstrutor
-            : widget.instrutores.isNotEmpty
-                ? widget.instrutores.first.idInstrutor
-                : null;
+    // Inicialização segura do instrutor selecionado
+    _instrutorIdSelecionado = widget.instrutores.any((i) => i.idInstrutor == widget.turma.idinstrutor)
+        ? widget.turma.idinstrutor
+        : widget.instrutores.isNotEmpty ? widget.instrutores.first.idInstrutor : null;
   }
 
   @override
@@ -69,7 +65,11 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
   }
 
   Future<void> _updateTurma() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || 
+        _cursoIdSelecionado == null || 
+        _instrutorIdSelecionado == null) {
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -158,8 +158,7 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         controller: _turmaController,
                         decoration: InputDecoration(
                           labelText: 'Identificação da Turma',
-                          prefixIcon:
-                              Icon(Icons.groups, color: colorScheme.primary),
+                          prefixIcon: Icon(Icons.groups, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),
@@ -188,8 +187,7 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Turno',
-                          prefixIcon:
-                              Icon(Icons.schedule, color: colorScheme.primary),
+                          prefixIcon: Icon(Icons.schedule, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),
@@ -214,8 +212,7 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Curso',
-                          prefixIcon:
-                              Icon(Icons.school, color: colorScheme.primary),
+                          prefixIcon: Icon(Icons.school, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),
@@ -227,19 +224,12 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                       const SizedBox(height: 20),
                       DropdownButtonFormField<int>(
                         value: _instrutorIdSelecionado,
-                        items: widget.instrutores.isEmpty
-                            ? [
-                                const DropdownMenuItem<int>(
-                                  value: null,
-                                  child: Text('Nenhum instrutor disponível'),
-                                )
-                              ]
-                            : widget.instrutores.map((instrutor) {
-                                return DropdownMenuItem<int>(
-                                  value: instrutor.idInstrutor,
-                                  child: Text(instrutor.nomeInstrutor),
-                                );
-                              }).toList(),
+                        items: widget.instrutores.map((instrutor) {
+                          return DropdownMenuItem<int>(
+                            value: instrutor.idInstrutor,
+                            child: Text(instrutor.nomeInstrutor),
+                          );
+                        }).toList(),
                         onChanged: (int? value) {
                           if (value != null) {
                             setState(() => _instrutorIdSelecionado = value);
@@ -247,8 +237,7 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Instrutor',
-                          prefixIcon:
-                              Icon(Icons.person, color: colorScheme.primary),
+                          prefixIcon: Icon(Icons.person, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),

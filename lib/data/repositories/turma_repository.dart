@@ -1,4 +1,4 @@
-import 'package:cronograma/data/models/turma_com_nomes.dart' show TurmaComNomes;
+import 'package:cronograma/data/models/turma_com_nomes.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../core/database_helper.dart';
 import '../models/turma_model.dart';
@@ -14,15 +14,16 @@ class TurmaRepository {
     );
   }
 
+  // Get all classes with proper error handling
   Future<List<Turma>> getTurmas() async {
-    try {
-      final db = await DatabaseHelper.instance.database;
-      final List<Map<String, dynamic>> turmaMaps = await db.query('Turma');
-      return turmaMaps.map<Turma>((map) => Turma.fromMap(map)).toList();
-    } catch (e) {
-      throw Exception('Failed to load classes: $e');
-    }
+  try {
+    final db = await DatabaseHelper.instance.database;
+    final List<Map<String, dynamic>> turmaMaps = await db.query('Turma');
+    return turmaMaps.map<Turma>((map) => Turma.fromMap(map)).toList();
+  } catch (e) {
+    throw Exception('Failed to load classes: $e');
   }
+}
 
   // Get all classes with proper error handling
   Future<List<TurmaComNomes>> getTurmasNomes() async {
@@ -47,7 +48,7 @@ class TurmaRepository {
       throw Exception('Failed to load classes: $e');
     }
   }
-
+  
   // Get classes by course ID
   Future<List<Turma>> getTurmasByCurso(int cursoId) async {
     final db = await DatabaseHelper.instance.database;

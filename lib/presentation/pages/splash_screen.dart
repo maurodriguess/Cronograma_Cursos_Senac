@@ -1,5 +1,5 @@
+import 'package:cronograma/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:cronograma/presentation/pages/main_home_page.dart'; // Importe a MainHomePage
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainHomePage()),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     }
   }
@@ -158,6 +158,7 @@ class _WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
+      // ignore: deprecated_member_use
       ..color = Colors.teal[900]!.withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
