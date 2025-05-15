@@ -1,5 +1,3 @@
-// ignore_for_file: unrelated_type_equality_checks
-
 import 'package:cronograma/data/models/cursos_model.dart';
 import 'package:cronograma/data/models/instrutores_model.dart';
 import 'package:cronograma/data/models/turma_model.dart';
@@ -41,21 +39,31 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
   void initState() {
     super.initState();
     _turmaController = TextEditingController(text: widget.turma.turma);
-    
+
     // Inicialização segura do turno selecionado
-    _turnoSelecionado = widget.turnos.isNotEmpty && widget.turma.idturno > 0 && widget.turma.idturno <= widget.turnos.length
+    _turnoSelecionado = widget.turnos.isNotEmpty &&
+            widget.turma.idturno > 0 &&
+            widget.turma.idturno <= widget.turnos.length
         ? widget.turnos[widget.turma.idturno - 1]
-        : widget.turnos.isNotEmpty ? widget.turnos.first : 'Matutino';
+        : widget.turnos.isNotEmpty
+            ? widget.turnos.first
+            : 'Matutino';
 
     // Inicialização segura do curso selecionado
-    _cursoIdSelecionado = widget.cursos.any((c) => c.idCurso == widget.turma.idcurso)
-        ? widget.turma.idcurso
-        : widget.cursos.isNotEmpty ? widget.cursos.first.idCurso : null;
+    _cursoIdSelecionado =
+        widget.cursos.any((c) => c.idCurso == widget.turma.idcurso)
+            ? widget.turma.idcurso
+            : widget.cursos.isNotEmpty
+                ? widget.cursos.first.idCurso
+                : null;
 
     // Inicialização segura do instrutor selecionado
-    _instrutorIdSelecionado = widget.instrutores.any((i) => i.idInstrutor == widget.turma.idinstrutor)
-        ? widget.turma.idinstrutor
-        : widget.instrutores.isNotEmpty ? widget.instrutores.first.idInstrutor : null;
+    _instrutorIdSelecionado =
+        widget.instrutores.any((i) => i.idInstrutor == widget.turma.idinstrutor)
+            ? widget.turma.idinstrutor
+            : widget.instrutores.isNotEmpty
+                ? widget.instrutores.first.idInstrutor
+                : null;
   }
 
   @override
@@ -65,8 +73,8 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
   }
 
   Future<void> _updateTurma() async {
-    if (!_formKey.currentState!.validate() || 
-        _cursoIdSelecionado == null || 
+    if (!_formKey.currentState!.validate() ||
+        _cursoIdSelecionado == null ||
         _instrutorIdSelecionado == null) {
       return;
     }
@@ -158,7 +166,8 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         controller: _turmaController,
                         decoration: InputDecoration(
                           labelText: 'Identificação da Turma',
-                          prefixIcon: Icon(Icons.groups, color: colorScheme.primary),
+                          prefixIcon:
+                              Icon(Icons.groups, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),
@@ -187,7 +196,8 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Turno',
-                          prefixIcon: Icon(Icons.schedule, color: colorScheme.primary),
+                          prefixIcon:
+                              Icon(Icons.schedule, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),
@@ -212,7 +222,8 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Curso',
-                          prefixIcon: Icon(Icons.school, color: colorScheme.primary),
+                          prefixIcon:
+                              Icon(Icons.school, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),
@@ -227,7 +238,22 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         items: widget.instrutores.map((instrutor) {
                           return DropdownMenuItem<int>(
                             value: instrutor.idInstrutor,
-                            child: Text(instrutor.nomeInstrutor),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(instrutor.nomeInstrutor),
+                                const SizedBox(width: 8),
+                                if (instrutor.especializacao != null)
+                                  Text(
+                                    '- ${instrutor.especializacao!}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           );
                         }).toList(),
                         onChanged: (int? value) {
@@ -237,7 +263,8 @@ class _EditTurmaPageState extends State<EditTurmaPage> {
                         },
                         decoration: InputDecoration(
                           labelText: 'Instrutor',
-                          prefixIcon: Icon(Icons.person, color: colorScheme.primary),
+                          prefixIcon:
+                              Icon(Icons.person, color: colorScheme.primary),
                           border: const OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: colorScheme.primary),

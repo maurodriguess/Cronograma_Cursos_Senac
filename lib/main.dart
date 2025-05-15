@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:cronograma/presentation/pages/cronograma_page.dart';
+import 'package:cronograma/presentation/pages/Cronograma/cronograma_page.dart';
 import 'package:cronograma/presentation/pages/main_home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,11 +11,10 @@ Future<void> resetDatabase() async {
   final databasesPath = await getDatabasesPath();
   final path = join(databasesPath, 'education_database.db');
 
-  await deleteDatabase(path);  // Deleta o banco de dados
+  await deleteDatabase(path); // Deleta o banco de dados
   // ignore: avoid_print
   print("Banco de dados deletado!");
 }
-
 
 void main() {
   // Inicialização para ambientes desktop
@@ -35,7 +34,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Gestão de Cronogramas SENAC',
-      
+
       // Configurações de internacionalização
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -45,7 +44,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: const [
         Locale('pt', 'BR'),
       ],
-      
+
       // Configuração do tema
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -64,16 +63,16 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      
+
       // Tela inicial (splash screen que redireciona para MainHomePage)
       home: const SplashScreen(),
-      
+
       // Rotas nomeadas
       routes: {
-        '/home': (context) => const MainHomePage(),  // Página principal
+        '/home': (context) => const MainHomePage(), // Página principal
         '/cronograma': (context) => const CronogramaPage(),
       },
-      
+
       locale: const Locale('pt', 'BR'),
     );
   }
