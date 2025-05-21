@@ -1,12 +1,13 @@
+// ignore_for_file: empty_catches
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:intl/intl.dart';
 
 class DatabaseHelper {
   static const _databaseName = 'education_database.db';
-  static const _databaseVersion = 4; // Aumentei a versão para 4
+  static const _databaseVersion = 1;
 
-  // Singleton instance
   static final DatabaseHelper instance = DatabaseHelper._internal();
 
   DatabaseHelper._internal();
@@ -43,7 +44,6 @@ class DatabaseHelper {
       path,
       version: _databaseVersion,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
   }
 
@@ -111,61 +111,14 @@ class DatabaseHelper {
       );
     ''');
 
-    await _insertInitialData(db);
-  }
+    await db.execute('''
+      CREATE TABLE FeriadosMunicipais (
+        idFeriado INTEGER PRIMARY KEY AUTOINCREMENT,
+        data TEXT NOT NULL,
+        nome TEXT NOT NULL
+      );
+    ''');
 
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS Aulas (
-          idAula INTEGER PRIMARY KEY AUTOINCREMENT,
-          idUc INTEGER NOT NULL,
-          idTurma INTEGER NOT NULL,
-          data TEXT NOT NULL,
-          horario TEXT NOT NULL,
-          status TEXT DEFAULT 'Agendada',
-          observacoes TEXT,
-          FOREIGN KEY (idUc) REFERENCES Unidades_Curriculares(idUc),
-          FOREIGN KEY (idTurma) REFERENCES Turma(idTurma)
-        );
-      ''');
-    }
-
-    if (oldVersion < 3) {
-      try {
-        await db.execute(
-            'ALTER TABLE Unidades_Curriculares ADD COLUMN cargahoraria INTEGER DEFAULT 0');
-      } catch (e) {
-        // Ignora se a coluna já existir
-      }
-    }
-
-    if (oldVersion < 4) {
-      try {
-        await db.execute('ALTER TABLE Aulas ADD COLUMN horas INTEGER DEFAULT 1');
-      } catch (e) {
-        // Ignora se a coluna já existir
-      }
-    }
-  }
-
-
-  Future<void> _insertInitialData(Database db) async {
-    await db.insert('Turno', {'turno': 'Matutino'});
-    await db.insert('Turno', {'turno': 'Vespertino'});
-    await db.insert('Turno', {'turno': 'Noturno'});
-
-    await db.insert('Cursos',
-        {'nome_curso': 'Técnico em Informática', 'cargahoraria': 1200});
-    await db.insert('Cursos',
-        {'nome_curso': 'Técnico em Administração', 'cargahoraria': 1000});
-
-    await db.insert('Instrutores', {
-      'nome_instrutor': 'Prof. Silva',
-      'especializacao': 'Programação',
-      'email': 'silva@escola.com',
-      'telefone': '(11) 99999-9999'
-    });
   }
 
   Future<List<Map<String, dynamic>>> getAulasComDetalhes() async {
@@ -194,7 +147,7 @@ class DatabaseHelper {
     }).toList();
   }
 
-   Future<int> insertAula(Map<String, dynamic> aula) async {
+  Future<int> insertAula(Map<String, dynamic> aula) async {
     final db = await database;
 
     if (aula['data'] is String && (aula['data'] as String).contains('/')) {
@@ -204,12 +157,10 @@ class DatabaseHelper {
       }
     }
 
-    // Garante que o campo horas tenha um valor padrão se não foi fornecido
     aula['horas'] = aula['horas'] ?? 1;
 
     return await db.insert('Aulas', aula);
   }
-
 
   Future<int> updateAula(Map<String, dynamic> aula) async {
     final db = await database;
@@ -256,5 +207,22 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getInstrutores() async {
     final db = await database;
     return await db.query('Instrutores');
+  }
+
+  // -------------------
+  // FERIADOS MUNICIPAIS
+  // -------------------
+
+  Future<int> insertFeriadoMunicipal(String nome, DateTime data) async {
+    final db = await database;
+    return await db.insert('FeriadosMunicipais', {
+      'nome': nome,
+      'data': formatarParaBanco(data),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getFeriadosMunicipais() async {
+    final db = await database;
+    return await db.query('FeriadosMunicipais');
   }
 }

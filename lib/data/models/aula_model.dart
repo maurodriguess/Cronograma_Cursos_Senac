@@ -24,8 +24,7 @@ class Aula {
       idTurma: map['idTurma'] as int,
       data: DateTime.parse(map['data'] as String),
       horario: map['horario'] as String,
-      status: map['status'] as String,
-      horas: 1,
+      status: map['status'] as String, horas: 1,
     );
   }
 

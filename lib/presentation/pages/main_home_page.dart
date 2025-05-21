@@ -18,8 +18,8 @@ class MainHomePage extends StatelessWidget {
           // Define a largura máxima para o conteúdo
           const maxContentWidth = 800.0;
           // Usa a menor entre a largura da tela e 800 pixels
-          final contentWidth = constraints.maxWidth < maxContentWidth
-              ? constraints.maxWidth
+          final contentWidth = constraints.maxWidth < maxContentWidth 
+              ? constraints.maxWidth 
               : maxContentWidth;
 
           return Container(
@@ -90,9 +90,8 @@ class MainHomePage extends StatelessWidget {
                         LayoutBuilder(
                           builder: (context, constraints) {
                             // Define o número de colunas baseado na largura disponível
-                            int crossAxisCount =
-                                constraints.maxWidth < 600 ? 2 : 3;
-
+                            int crossAxisCount = constraints.maxWidth < 600 ? 2 : 3;
+                            
                             return GridView.count(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -120,8 +119,7 @@ class MainHomePage extends StatelessWidget {
                                   icon: Icons.book,
                                   label: 'Unidades Curriculares',
                                   color: Colors.purple,
-                                  destination:
-                                      const CadastroUnidadesCurricularesPage(),
+                                  destination: const CadastroUnidadesCurricularesPage(),
                                 ),
                                 _buildMenuButton(
                                   context,

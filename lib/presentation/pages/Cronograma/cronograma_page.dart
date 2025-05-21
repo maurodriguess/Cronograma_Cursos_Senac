@@ -1,12 +1,17 @@
-// ignore_for_file: library_private_types_in_public_api, unused_field, use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, avoid_print, non_constant_identifier_names, library_private_types_in_public_api
 
 import 'package:cronograma/data/models/aula_model.dart';
-import 'package:cronograma/presentation/pages/Cronograma/agendar_aulas_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pdf/pdf.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:cronograma/core/database_helper.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:cronograma/presentation/pages/Cronograma/agendar_aulas_page.dart';
+
+import '../../../widgets/feriados_dialog.dart';
 
 class CronogramaPage extends StatefulWidget {
   const CronogramaPage({super.key});
@@ -19,11 +24,15 @@ class _CronogramaPageState extends State<CronogramaPage> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   final Set<DateTime> _selectedDays = {};
-  CalendarFormat _calendarFormat = CalendarFormat.month;
   final Map<DateTime, List<Aula>> _events = {};
-  final Map<DateTime, String> _feriados = {};
+  final Map<DateTime, List<Aula>> _filteredEvents = {};
+  final Map<DateTime, String> _feriadosNacionais = {};
+  final Map<DateTime, String> _feriadosMunicipais = {};
   bool _isLoading = true;
   final Map<int, int> _cargaHorariaUc = {};
+  List<Map<String, dynamic>> _turmas = [];
+  List<Map<String, dynamic>> _cursos = [];
+  int? _selectedTurmaId;
 
   final Map<String, Map<String, dynamic>> _periodoConfig = {
     'Matutino': {
@@ -50,25 +59,105 @@ class _CronogramaPageState extends State<CronogramaPage> {
     _focusedDay = now;
     _selectedDay = now;
     _carregarFeriadosBrasileiros(now.year);
-    _carregarAulas();
+    _carregarFeriadosMunicipais();
+    _carregarTurmas().then((_) => _carregarAulas());
     _carregarCargaHorariaUc();
+    _carregarCursos();
+  }
+
+  Future<void> _carregarFeriadosMunicipais() async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final feriados = await db.query('FeriadosMunicipais');
+
+      setState(() {
+        _feriadosMunicipais.clear();
+        for (var feriado in feriados) {
+          try {
+            final dateStr = feriado['data'] as String;
+            final date = dateStr.contains('T')
+                ? DateTime.parse(dateStr).toLocal()
+                : DateTime.parse(dateStr);
+            final normalizedDate = DateTime(date.year, date.month, date.day);
+            _feriadosMunicipais[normalizedDate] = feriado['nome'] as String;
+          } catch (e) {
+            print('Erro ao processar feriado: $e');
+          }
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar feriados municipais: $e')),
+        );
+      }
+    }
+  }
+
+  void _showFeriadosDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => FeriadosDialog(
+        feriadosNacionais: _feriadosNacionais,
+        feriadosMunicipais: _feriadosMunicipais,
+        onFeriadoAdded: () async {
+          await _carregarFeriadosMunicipais();
+          setState(() {});
+        },
+      ),
+    );
+  }
+
+  Future<void> _carregarCursos() async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final cursos = await db.query('Cursos');
+      setState(() {
+        _cursos = cursos;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar cursos: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _carregarTurmas() async {
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final turmas = await db.query('Turma');
+      setState(() {
+        _turmas = turmas;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar turmas: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _carregarFeriadosBrasileiros(int ano) async {
-    _feriados[DateTime(ano, 1, 1)] = '🎉 Ano Novo';
-    _feriados[DateTime(ano, 4, 21)] = '🎖 Tiradentes';
-    _feriados[DateTime(ano, 5, 1)] = '👷 Dia do Trabalho';
-    _feriados[DateTime(ano, 9, 7)] = '🇧🇷 Independência do Brasil';
-    _feriados[DateTime(ano, 10, 12)] = '🙏 Nossa Senhora Aparecida';
-    _feriados[DateTime(ano, 11, 2)] = '🕯 Finados';
-    _feriados[DateTime(ano, 11, 15)] = '🏛 Proclamação da República';
-    _feriados[DateTime(ano, 12, 25)] = '🎄 Natal';
+    _feriadosNacionais[DateTime(ano, 1, 1)] = '🎉 Ano Novo';
+    _feriadosNacionais[DateTime(ano, 4, 21)] = '🎖 Tiradentes';
+    _feriadosNacionais[DateTime(ano, 5, 1)] = '👷 Dia do Trabalho';
+    _feriadosNacionais[DateTime(ano, 9, 7)] = '🇧🇷 Independência do Brasil';
+    _feriadosNacionais[DateTime(ano, 10, 12)] = '🙏 Nossa Senhora Aparecida';
+    _feriadosNacionais[DateTime(ano, 11, 2)] = '🕯 Finados';
+    _feriadosNacionais[DateTime(ano, 11, 15)] = '🏛 Proclamação da República';
+    _feriadosNacionais[DateTime(ano, 12, 25)] = '🎄 Natal';
 
     final pascoa = _calcularPascoa(ano);
-    _feriados[pascoa] = '🐣 Páscoa';
-    _feriados[pascoa.subtract(const Duration(days: 2))] = '✝ Sexta-Feira Santa';
-    _feriados[pascoa.subtract(const Duration(days: 47))] = '🎭 Carnaval';
-    _feriados[pascoa.add(const Duration(days: 60))] = '🍞 Corpus Christi';
+    _feriadosNacionais[pascoa] = '🐣 Páscoa';
+    _feriadosNacionais[pascoa.subtract(const Duration(days: 2))] =
+        '✝ Sexta-Feira Santa';
+    _feriadosNacionais[pascoa.subtract(const Duration(days: 47))] =
+        '🎭 Carnaval';
+    _feriadosNacionais[pascoa.add(const Duration(days: 60))] =
+        '🍞 Corpus Christi';
   }
 
   DateTime _calcularPascoa(int ano) {
@@ -117,6 +206,7 @@ class _CronogramaPageState extends State<CronogramaPage> {
         setState(() {
           _events.clear();
           _events.addAll(events);
+          _aplicarFiltroTurma();
           _isLoading = false;
         });
       }
@@ -126,6 +216,25 @@ class _CronogramaPageState extends State<CronogramaPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar aulas: $e')),
         );
+      }
+    }
+  }
+
+  void _aplicarFiltroTurma() {
+    _filteredEvents.clear();
+
+    if (_selectedTurmaId == null) {
+      _filteredEvents.addAll(_events);
+      return;
+    }
+
+    for (var entry in _events.entries) {
+      final filteredAulas = entry.value
+          .where((aula) => aula.idTurma == _selectedTurmaId)
+          .toList();
+
+      if (filteredAulas.isNotEmpty) {
+        _filteredEvents[entry.key] = filteredAulas;
       }
     }
   }
@@ -154,12 +263,14 @@ class _CronogramaPageState extends State<CronogramaPage> {
   }
 
   bool _isFeriado(DateTime day) {
-    return _feriados.containsKey(DateTime(day.year, day.month, day.day));
+    final normalizedDate = DateTime(day.year, day.month, day.day);
+    return _feriadosNacionais.containsKey(normalizedDate) ||
+        _feriadosMunicipais.containsKey(normalizedDate);
   }
 
   bool _isDiaUtil(DateTime day) {
-    if (day.weekday == 6 || day.weekday == 7) return false;
-    if (_isFeriado(day)) return false;
+    if (day.weekday == 7) return false; // Apenas domingo não é dia útil
+    if (_isFeriado(day)) return false; // Feriados também não são dias úteis
     return true;
   }
 
@@ -179,8 +290,9 @@ class _CronogramaPageState extends State<CronogramaPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(
-                    'Não é possível agendar em finais de semana ou feriados: $formatados')),
+              content: Text(
+                  'Não é possível agendar em domingos ou feriados: $formatados'),
+            ),
           );
         }
         return;
@@ -197,7 +309,6 @@ class _CronogramaPageState extends State<CronogramaPage> {
       );
 
       if (result == true) {
-        // Recarrega os dados se as aulas foram salvas com sucesso
         await _carregarAulas();
         await _carregarCargaHorariaUc();
 
@@ -218,6 +329,392 @@ class _CronogramaPageState extends State<CronogramaPage> {
         );
       }
     }
+  }
+
+  Future<void> _imprimirCronogramaWindows() async {
+    final pdf = pw.Document();
+
+    final turmaInfo = _selectedTurmaId != null
+        ? _turmas.firstWhere((t) => t['idTurma'] == _selectedTurmaId)
+        : null;
+
+    String nomeCurso = 'Não especificado';
+    if (turmaInfo != null && turmaInfo['idCurso'] != null) {
+      try {
+        final db = await DatabaseHelper.instance.database;
+        final curso = await db.query(
+          'Cursos',
+          where: 'idCurso = ?',
+          whereArgs: [turmaInfo['idCurso']],
+          limit: 1,
+        );
+        if (curso.isNotEmpty) {
+          nomeCurso = curso.first['nome_curso'] as String;
+        }
+      } catch (e) {
+        print('Erro ao buscar curso: $e');
+      }
+    }
+
+    final List<Future> futures = [];
+    final Map<DateTime, List<Map<String, dynamic>>> aulasComDetalhes = {};
+
+    for (var entry in _filteredEvents.entries) {
+      for (var aula in entry.value) {
+        futures.add(_getAulaDetails(aula.idAula!).then((detalhes) {
+          aulasComDetalhes.putIfAbsent(entry.key, () => []).add(detalhes);
+        }));
+      }
+    }
+
+    await Future.wait(futures);
+
+    final Map<String, List<Map<String, dynamic>>> aulasPorUc = {};
+    for (var entry in aulasComDetalhes.entries) {
+      for (var aula in entry.value) {
+        final uc = aula['nome_uc'] as String;
+        aulasPorUc.putIfAbsent(uc, () => []).add(aula);
+      }
+    }
+
+    final diasComAulas = <int>{};
+    for (var data in aulasComDetalhes.keys) {
+      diasComAulas.add(data.weekday);
+    }
+
+    final periodoFormatado = _formatarPeriodo(diasComAulas.toList());
+
+    final ucColors = <String, PdfColor>{};
+    final basicColors = [
+      PdfColors.green,
+      PdfColors.orange,
+      PdfColors.purple,
+      PdfColors.yellow,
+      PdfColors.teal,
+      PdfColors.pink,
+    ];
+
+    int colorIndex = 0;
+    for (var uc in aulasPorUc.keys) {
+      ucColors[uc] = basicColors[colorIndex % basicColors.length];
+      colorIndex++;
+    }
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4.landscape,
+        build: (pw.Context context) {
+          return [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Center(
+                  child: pw.Text('SENAC CATALÃO',
+                      style: pw.TextStyle(
+                          fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Row(
+                  children: [
+                    pw.Text('CURSO: ',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text(nomeCurso),
+                  ],
+                ),
+                pw.Row(
+                  children: [
+                    pw.Text('TURMA: ',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text(turmaInfo?['turma'] ?? 'Todas as Turmas'),
+                  ],
+                ),
+                pw.Row(
+                  children: [
+                    pw.Text('PERÍODO: ',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text(periodoFormatado),
+                  ],
+                ),
+                pw.Row(
+                  children: [
+                    pw.Text('HORÁRIO: ',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text(turmaInfo?['horario'] ?? ''),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+                pw.Center(
+                  child: pw.Text('CRONOGRAMA DE AULAS - ${DateTime.now().year}',
+                      style: pw.TextStyle(
+                          fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildLegendaItem(
+                        'F', 'Feriado', PdfColors.red100, PdfColors.red),
+                    _buildLegendaItem(
+                        'Dom', 'Domingo', PdfColors.red100, PdfColors.red),
+                    _buildLegendaItem('H', 'Aula (horas)', PdfColors.blue100,
+                        PdfColors.blue900),
+                    _buildLegendaItem(
+                        '', 'Dia sem aula', PdfColors.grey200, PdfColors.black),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+              ],
+            ),
+            for (var mes in _getMesesComAulas(aulasComDetalhes))
+              _buildTabelaMes(mes, aulasPorUc, ucColors),
+          ];
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      usePrinterSettings: true,
+    );
+  }
+
+  pw.Widget _buildLegendaItem(
+      String simbolo, String descricao, PdfColor corFundo, PdfColor corTexto) {
+    return pw.Row(
+      children: [
+        pw.Container(
+          width: 20,
+          height: 20,
+          decoration: pw.BoxDecoration(
+            color: corFundo,
+            border: pw.Border.all(),
+          ),
+          child: pw.Center(
+            child: pw.Text(
+              simbolo,
+              style: pw.TextStyle(
+                fontSize: 8,
+                fontWeight: pw.FontWeight.bold,
+                color: corTexto,
+              ),
+            ),
+          ),
+        ),
+        pw.SizedBox(width: 5),
+        pw.Text(
+          descricao,
+          style: const pw.TextStyle(fontSize: 10),
+        ),
+        pw.SizedBox(width: 10),
+      ],
+    );
+  }
+
+  String _formatarPeriodo(List<int> diasDaSemana) {
+    if (diasDaSemana.isEmpty) return 'Nenhuma aula marcada';
+
+    diasDaSemana.sort();
+
+    final diasMap = {
+      1: 'Seg',
+      2: 'Ter',
+      3: 'Qua',
+      4: 'Qui',
+      5: 'Sex',
+      6: 'Sáb',
+      7: 'Dom',
+    };
+
+    if (diasDaSemana.contains(1) &&
+        diasDaSemana.contains(2) &&
+        diasDaSemana.contains(3) &&
+        diasDaSemana.contains(4) &&
+        diasDaSemana.contains(5)) {
+      return 'Segunda a Sexta';
+    }
+
+    if (diasDaSemana.contains(1) &&
+        diasDaSemana.contains(2) &&
+        diasDaSemana.contains(3) &&
+        diasDaSemana.contains(4) &&
+        diasDaSemana.contains(5) &&
+        diasDaSemana.contains(6) &&
+        diasDaSemana.contains(7)) {
+      return 'Todos os dias';
+    }
+
+    return diasDaSemana.map((dia) => diasMap[dia]).join(', ');
+  }
+
+  List<DateTime> _getMesesComAulas(
+      Map<DateTime, List<Map<String, dynamic>>> aulasComDetalhes) {
+    final Set<DateTime> meses = {};
+    for (var data in aulasComDetalhes.keys) {
+      meses.add(DateTime(data.year, data.month, 1));
+    }
+    final mesesList = meses.toList();
+    mesesList.sort((a, b) => a.compareTo(b));
+    return mesesList;
+  }
+
+  pw.Widget _buildTabelaMes(
+      DateTime mes,
+      Map<String, List<Map<String, dynamic>>> aulasPorUc,
+      Map<String, PdfColor> ucColors) {
+    final nomeMes = DateFormat('MMMM', 'pt_BR').format(mes);
+    final diasNoMes = DateTime(mes.year, mes.month + 1, 0).day;
+    final dias = <DateTime>[];
+    for (var i = 1; i <= diasNoMes; i++) {
+      dias.add(DateTime(mes.year, mes.month, i));
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(nomeMes,
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        pw.SizedBox(height: 5),
+        pw.Table(
+          border: pw.TableBorder.all(),
+          columnWidths: {
+            0: const pw.FixedColumnWidth(150),
+            ...{
+              for (var i in List.generate(diasNoMes, (i) => i + 1))
+                i: const pw.FixedColumnWidth(25)
+            },
+          },
+          children: [
+            pw.TableRow(
+              children: [
+                pw.Container(),
+                for (var dia in dias)
+                  pw.Container(
+                    color: _isFeriado(dia) ? PdfColors.red100 : null,
+                    child: pw.Center(
+                      child: pw.Text(
+                        DateFormat('E', 'pt_BR').format(dia).substring(0, 3),
+                        style: pw.TextStyle(
+                          fontSize: 8,
+                          fontWeight: pw.FontWeight.bold,
+                          color: _isFeriado(dia) ? PdfColors.red : null,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            pw.TableRow(
+              children: [
+                pw.Container(),
+                for (var dia in dias)
+                  pw.Container(
+                    color: _isFeriado(dia) ? PdfColors.red100 : null,
+                    child: pw.Center(
+                      child: pw.Text(
+                        '${dia.day}',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          color: _isFeriado(dia) ? PdfColors.red : null,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            for (var uc in aulasPorUc.keys)
+              pw.TableRow(
+                children: [
+                  pw.Container(
+                    color: ucColors[uc],
+                    child: pw.Padding(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.Text(
+                        uc,
+                        style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                  for (var dia in dias)
+                    _getCelulaDia(uc, dia, aulasPorUc, ucColors),
+                ],
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 20),
+      ],
+    );
+  }
+
+  pw.Widget _getCelulaDia(
+      String uc,
+      DateTime dia,
+      Map<String, List<Map<String, dynamic>>> aulasPorUc,
+      Map<String, PdfColor> ucColors) {
+    final isFimDeSemanaOuFeriado =
+        dia.weekday == 7 || _isFeriado(dia); // Apenas domingo e feriados
+
+    if (isFimDeSemanaOuFeriado) {
+      return pw.Container(
+        height: 20,
+        decoration: pw.BoxDecoration(
+          color: PdfColors.red100,
+          border: pw.Border.all(),
+        ),
+        child: pw.Center(
+          child: pw.Text(
+            dia.weekday == 6 || dia.weekday == 7 ? 'Dom' : 'F',
+            style: pw.TextStyle(
+              fontSize: 8,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.red,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final aulasDesteDia = aulasPorUc[uc]?.where((aula) {
+      final aulaDate = DateTime.parse(aula['data']);
+      return aulaDate.year == dia.year &&
+          aulaDate.month == dia.month &&
+          aulaDate.day == dia.day;
+    }).toList();
+
+    if (aulasDesteDia == null || aulasDesteDia.isEmpty) {
+      return pw.Container(
+        height: 20,
+        decoration: pw.BoxDecoration(
+          color: PdfColors.grey200,
+          border: pw.Border.all(),
+        ),
+        child: pw.SizedBox(),
+      );
+    }
+
+    final totalHoras = aulasDesteDia.fold<int>(0, (sum, aula) {
+      return sum + (aula['horas'] as int? ?? 0);
+    });
+
+    return pw.Container(
+      height: 20,
+      decoration: pw.BoxDecoration(
+        color: PdfColors.blue100,
+        border: pw.Border.all(),
+      ),
+      child: pw.Center(
+        child: pw.Text(
+          '${totalHoras}h',
+          style: pw.TextStyle(
+            fontSize: 8,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.blue900,
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _removerAula(
@@ -275,18 +772,34 @@ class _CronogramaPageState extends State<CronogramaPage> {
     }
   }
 
+  // void _editarAula(Aula aula) {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => EditarAulasPage(),
+  //     ),
+  //   ).then((_) {
+  //     _carregarAulas(); // Recarrega a lista após possível edição
+  //   });
+  // }
+
   List<Aula> _getEventsForDay(DateTime day) {
-    return _events[DateTime(day.year, day.month, day.day)] ?? [];
+    if (_selectedTurmaId == null) {
+      return _events[DateTime(day.year, day.month, day.day)] ?? [];
+    } else {
+      return _filteredEvents[DateTime(day.year, day.month, day.day)] ?? [];
+    }
   }
 
   String? _getFeriadoForDay(DateTime day) {
-    return _feriados[DateTime(day.year, day.month, day.day)];
+    final normalizedDate = DateTime(day.year, day.month, day.day);
+    return _feriadosNacionais[normalizedDate] ??
+        _feriadosMunicipais[normalizedDate];
   }
 
   Widget _buildEventList() {
     if (_selectedDay == null && _selectedDays.isEmpty) return const SizedBox();
 
-    // Se apenas um dia está selecionado
     if (_selectedDay != null && _selectedDays.isEmpty) {
       final events = _getEventsForDay(_selectedDay!);
       final feriado = _getFeriadoForDay(_selectedDay!);
@@ -294,7 +807,6 @@ class _CronogramaPageState extends State<CronogramaPage> {
       return _buildDayEvents(_selectedDay!, events, feriado);
     }
 
-    // Se múltiplos dias estão selecionados
     return ListView(
       children: _selectedDays.map((day) {
         final events = _getEventsForDay(day);
@@ -398,10 +910,19 @@ class _CronogramaPageState extends State<CronogramaPage> {
             ),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () =>
-              _removerAula(aula.idAula!, aula.idUc, aula.horario, aula.horas),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // IconButton(
+            //   icon: const Icon(Icons.edit, color: Colors.blue),
+            //   onPressed: () => _editarAula(aula),
+            // ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _removerAula(
+                  aula.idAula!, aula.idUc, aula.horario, aula.horas),
+            ),
+          ],
         ),
       ),
     );
@@ -434,7 +955,10 @@ class _CronogramaPageState extends State<CronogramaPage> {
         return {
           'nome_uc': 'Não encontrado',
           'turma': 'Não encontrada',
-          'nome_instrutor': 'Não encontrado'
+          'nome_instrutor': 'Não encontrado',
+          'horario': '',
+          'status': '',
+          'horas': 0
         };
       }
 
@@ -443,48 +967,29 @@ class _CronogramaPageState extends State<CronogramaPage> {
       return {
         'nome_uc': 'Erro: $e',
         'turma': 'Erro: $e',
-        'nome_instrutor': 'Erro: $e'
+        'nome_instrutor': 'Erro: $e',
+        'horario': '',
+        'status': '',
+        'horas': 0
       };
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cronograma de Aulas'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.print),
+            onPressed: _imprimirCronogramaWindows,
+          ),
+          IconButton(
             icon: const Icon(Icons.event),
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Feriados Nacionais'),
-                content: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: _feriados.entries
-                        .map((e) => ListTile(
-                              leading: const Icon(Icons.celebration),
-                              title: Text(e.value),
-                              subtitle: Text(
-                                DateFormat('EEEE, dd/MM/yyyy', 'pt_BR')
-                                    .format(e.key),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Fechar'),
-                  ),
-                ],
-              ),
-            ),
+            onPressed: _showFeriadosDialog,
           ),
         ],
       ),
@@ -497,6 +1002,46 @@ class _CronogramaPageState extends State<CronogramaPage> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: DropdownButtonFormField<int>(
+                    isExpanded: true,
+                    value: _selectedTurmaId,
+                    decoration: InputDecoration(
+                      labelText: 'Filtrar por Turma',
+                      prefixIcon:
+                          Icon(Icons.filter_list, color: colorScheme.primary),
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 12,
+                      ),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int>(
+                        value: null,
+                        child: Text('Todas as Turmas'),
+                      ),
+                      ..._turmas.map((turma) {
+                        final curso = _cursos.firstWhere(
+                          (c) => c['idCurso'] == turma['idCurso'],
+                          orElse: () => {'nome_curso': 'Curso não encontrado'},
+                        );
+                        return DropdownMenuItem<int>(
+                          value: turma['idTurma'] as int,
+                          child: Text(
+                              '${curso['nome_curso']} - ${turma['turma']}'),
+                        );
+                      }),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedTurmaId = value;
+                        _aplicarFiltroTurma();
+                      });
+                    },
+                  ),
+                ),
                 TableCalendar(
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.utc(2030, 12, 31),
@@ -508,8 +1053,6 @@ class _CronogramaPageState extends State<CronogramaPage> {
                   onDaySelected: (selectedDay, focusedDay) {
                     setState(() {
                       _focusedDay = focusedDay;
-
-                      // Verifica se Shift ou Ctrl está pressionado (para multi-seleção)
                       final isShiftPressed = HardwareKeyboard
                           .instance.logicalKeysPressed
                           .any((key) =>
@@ -522,22 +1065,18 @@ class _CronogramaPageState extends State<CronogramaPage> {
                               key == LogicalKeyboardKey.controlRight);
 
                       if (isShiftPressed || isCtrlPressed) {
-                        // Modo de seleção múltipla
                         if (_selectedDays.contains(selectedDay)) {
                           _selectedDays.remove(selectedDay);
                         } else {
                           _selectedDays.add(selectedDay);
                         }
-                        _selectedDay = null; // Limpa seleção única
+                        _selectedDay = null;
                       } else {
-                        // Modo de visualização (seleção única)
                         _selectedDays.clear();
                         _selectedDay = selectedDay;
                       }
                     });
                   },
-                  onFormatChanged: (format) =>
-                      setState(() => _calendarFormat = format),
                   onPageChanged: (focusedDay) =>
                       setState(() => _focusedDay = focusedDay),
                   eventLoader: _getEventsForDay,
@@ -600,7 +1139,8 @@ class _CronogramaPageState extends State<CronogramaPage> {
                     },
                     defaultBuilder: (context, date, _) {
                       final isFeriado = _isFeriado(date);
-                      final isWeekend = date.weekday == 6 || date.weekday == 7;
+                      final isDomingo = date.weekday == 7;
+                      final isSabado = date.weekday == 6;
                       final isToday = isSameDay(date, DateTime.now());
                       final isSelected = _selectedDays.contains(date) ||
                           isSameDay(_selectedDay, date);
@@ -620,9 +1160,12 @@ class _CronogramaPageState extends State<CronogramaPage> {
                                 ? Colors.orange
                                 : isFeriado
                                     ? Colors.red
-                                    : isSelected
+                                    : isSabado
                                         ? Colors.blue
-                                        : Colors.transparent,
+                                            .shade200 // Cor diferente para sábado (não nula)
+                                        : isSelected
+                                            ? Colors.blue
+                                            : Colors.transparent,
                             width: isToday ? 2 : 1,
                           ),
                           shape: BoxShape.circle,
@@ -633,11 +1176,14 @@ class _CronogramaPageState extends State<CronogramaPage> {
                             style: TextStyle(
                               color: isFeriado
                                   ? Colors.red[800]
-                                  : isWeekend
+                                  : isDomingo
                                       ? Colors.red
-                                      : isSelected
-                                          ? Colors.blue[900]
-                                          : null,
+                                      : isSabado
+                                          ? Colors.blue
+                                              .shade800 // Cor diferente para sábado (não nula)
+                                          : isSelected
+                                              ? Colors.blue[900]
+                                              : null,
                               fontWeight: isFeriado || isSelected
                                   ? FontWeight.bold
                                   : null,

@@ -17,6 +17,7 @@ Future<void> resetDatabase() async {
 }
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   // Inicialização para ambientes desktop
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();

@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cronograma/core/database_helper.dart';
@@ -232,12 +234,14 @@ class _AgendarAulasPageState extends State<AgendarAulasPage> {
                             // <<< aqui: controla o que aparece no campo quando um item está selecionado
                             selectedItemBuilder: (_) {
                               return _ucsFiltradas.map((uc) {
-                                return Text(
-                                  uc['nome_uc'] as String,
-                                  softWrap: true,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.visible,
-                                  style: const TextStyle(fontSize: 14),
+                                return Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    uc['nome_uc'] as String,
+                                    maxLines: 2, // permite quebra de linha
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
                                 );
                               }).toList();
                             },
